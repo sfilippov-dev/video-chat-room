@@ -74,6 +74,17 @@ export function collectEvents(socket, event, windowMs = 200) {
   });
 }
 
+/**
+ * Ack на join приходит раньше широковещательных событий этого же входа.
+ * Пауза даёт им долететь, чтобы подписка в тесте ловила события следующего
+ * действия, а не предыдущего.
+ */
+export function settle(ms = 60) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 export function closeAll(...sockets) {
   sockets.filter(Boolean).forEach((socket) => {
     socket.removeAllListeners();

@@ -1,6 +1,12 @@
 import { EVENTS, ERROR_CODES, MESSAGE_TYPES, SYSTEM_EVENTS } from './events.js';
 import { validateName, validateRoomId } from '../validation.js';
-import { tryAddParticipant, addMessage, getParticipants, getMessages } from '../rooms.js';
+import {
+  tryAddParticipant,
+  removeParticipant,
+  addMessage,
+  getParticipants,
+  getMessages,
+} from '../rooms.js';
 
 /**
  * Обработчики событий одного сокета.
@@ -14,6 +20,8 @@ export function registerHandlers(io, socket) {
   socket.data.name = null;
 
   socket.on(EVENTS.JOIN, (payload, ack) => handleJoin(io, socket, payload, ack));
+  socket.on(EVENTS.LEAVE, () => handleLeave(io, socket));
+  socket.on('disconnect', () => handleLeave(io, socket));
 }
 
 /**
@@ -89,5 +97,41 @@ function handleJoin(io, socket, payload, ack) {
   });
   socket.to(roomId).emit(EVENTS.CHAT_SYSTEM, systemMessage);
 
+  io.to(roomId).emit(EVENTS.PARTICIPANTS, { participants: getParticipants(roomId) });
+}
+
+/**
+ * Выход из комнаты.
+ *
+ * Один и тот же код обслуживает кнопку «Выйти», закрытие вкладки и обрыв связи:
+ * сервер принципиально не может отличить одно от другого. Именно поэтому
+ * системное сообщение всегда «покинул комнату», а формулировка «соединение
+ * потеряно» не используется нигде (PRD п. 31). Автопереподключения нет:
+ * вернуться можно только повторным входом по ссылке.
+ *
+ * Идемпотентен: после явного leave придёт ещё и disconnect.
+ */
+function handleLeave(io, socket) {
+  const { roomId, name } = socket.data;
+  if (!roomId) return;
+
+  socket.data.roomId = null;
+  socket.data.name = null;
+  socket.leave(roomId);
+
+  const { removed, roomDeleted } = removeParticipant(roomId, socket.id);
+  if (!removed) return;
+
+  // Комната вместе с историей уже удалена — рассылать некому и нечего.
+  if (roomDeleted) return;
+
+  const systemMessage = addMessage(roomId, {
+    type: MESSAGE_TYPES.SYSTEM,
+    name: removed.name ?? name,
+    text: SYSTEM_EVENTS.LEFT,
+  });
+
+  io.to(roomId).emit(EVENTS.PEER_LEFT, { id: socket.id, name: removed.name ?? name });
+  io.to(roomId).emit(EVENTS.CHAT_SYSTEM, systemMessage);
   io.to(roomId).emit(EVENTS.PARTICIPANTS, { participants: getParticipants(roomId) });
 }

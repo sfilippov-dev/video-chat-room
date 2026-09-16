@@ -20,6 +20,8 @@ export class LocalMediaController {
     this.hasMic = false;
     this.hasCam = false;
     this.error = null;
+    /** Устройство пропало уже во время звонка — это отдельный случай отказа. */
+    this.deviceLost = false;
 
     this.listeners = new Map();
   }
@@ -41,6 +43,7 @@ export class LocalMediaController {
       hasMic: this.hasMic,
       hasCam: this.hasCam,
       error: this.error,
+      deviceLost: this.deviceLost,
     };
   }
 
@@ -150,6 +153,7 @@ export class LocalMediaController {
         this.emit('video-track-changed', null);
       }
 
+      this.deviceLost = true;
       this.error = 'Устройство стало недоступно. Проверьте его в настройках браузера или системы.';
       this.emit('state-changed', this.state);
     });
@@ -211,6 +215,7 @@ export class LocalMediaController {
     this.hasCam = true;
     this.camOn = true;
     this.error = null;
+    this.deviceLost = false;
 
     this.emit('video-track-changed', track);
     this.emit('state-changed', this.state);

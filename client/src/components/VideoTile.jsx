@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react';
  * Про muted на своей плитке. Это не косметика: без него собственный микрофон
  * играет в собственные динамики и даёт эхо и свист.
  */
-export default function VideoTile({ participant, stream, isSelf, connectionFailed }) {
+export default function VideoTile({ participant, stream, isSelf, connectionFailed, deviceLost }) {
   const videoRef = useRef(null);
   const [needsGesture, setNeedsGesture] = useState(false);
 
@@ -67,6 +67,14 @@ export default function VideoTile({ participant, stream, isSelf, connectionFaile
       {connectionFailed ? (
         <p className="tile__error" role="alert">
           Не удалось установить соединение с участником
+        </p>
+      ) : null}
+
+      {/* Устройство пропало во время звонка: выглядит так же, как ручное
+          выключение, но причина другая, и её нужно назвать. */}
+      {deviceLost ? (
+        <p className="tile__error tile__error--warning" role="alert">
+          Устройство недоступно
         </p>
       ) : null}
 

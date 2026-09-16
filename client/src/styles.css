@@ -276,6 +276,10 @@ body {
   font-size: 14px;
 }
 
+.tile__error--warning {
+  background: rgba(180, 83, 9, 0.9);
+}
+
 .tile__sound {
   position: absolute;
   top: 12px;

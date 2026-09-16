@@ -66,12 +66,16 @@ export default function RoomScreen({ roomId, name, onLeave }) {
         localStream={session.localStream}
         remoteStreams={session.remoteStreams}
         failedPeers={session.failedPeers}
+        mediaState={session.mediaState}
       />
 
       <ControlBar
         micOn={session.mediaState.micOn}
         hasMic={session.mediaState.hasMic}
+        camOn={session.mediaState.camOn}
+        hasCam={session.mediaState.hasCam}
         onToggleMic={session.toggleMic}
+        onToggleCamera={session.toggleCamera}
       />
     </main>
   );

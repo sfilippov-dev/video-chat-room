@@ -46,6 +46,7 @@ export function useRoomSession({ roomId, name }) {
     hasMic: false,
     hasCam: false,
     error: null,
+    deviceLost: false,
   });
 
   // Заполняются задачами про WebRTC: потоки соседей и плитки, чьё соединение

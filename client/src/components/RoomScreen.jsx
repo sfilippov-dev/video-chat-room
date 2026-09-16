@@ -3,6 +3,8 @@ import VideoGrid from './VideoGrid.jsx';
 import ControlBar from './ControlBar.jsx';
 import ChatPanel from './ChatPanel.jsx';
 import ParticipantList from './ParticipantList.jsx';
+import Notice, { NoticeScreen } from './Notice.jsx';
+import { ERROR_CODES } from '../lib/events.js';
 
 /**
  * Экран комнаты: видеосетка, панель управления, состав комнаты и чат.
@@ -40,17 +42,16 @@ export default function RoomScreen({ roomId, name, onLeave }) {
     session.status === SESSION_STATUS.DISCONNECTED
   ) {
     return (
-      <main className="shell shell--narrow">
-        <h1 className="title">Не получилось</h1>
-        <p className="notice notice--error" role="alert">
-          {session.error}
-        </p>
-        <p className="room-actions">
-          <button className="button button--primary" type="button" onClick={onLeave}>
-            Повторить вход
-          </button>
-        </p>
-      </main>
+      <NoticeScreen
+        title={failureTitle(session.status, session.errorCode)}
+        text={session.error}
+        actionLabel={
+          session.status === SESSION_STATUS.DISCONNECTED
+            ? 'Вернуться на стартовый экран'
+            : 'Повторить вход'
+        }
+        onAction={onLeave}
+      />
     );
   }
 
@@ -61,9 +62,7 @@ export default function RoomScreen({ roomId, name, onLeave }) {
       </header>
 
       {session.mediaState.error ? (
-        <p className="notice notice--warning" role="alert">
-          {session.mediaState.error}
-        </p>
+        <Notice tone="warning" text={session.mediaState.error} />
       ) : null}
 
       <div className="room-layout">
@@ -101,4 +100,25 @@ export default function RoomScreen({ roomId, name, onLeave }) {
       </div>
     </main>
   );
+}
+
+/**
+ * Заголовок экрана отказа. Причина называется прямо: «Комната заполнена» —
+ * это совсем не то же самое, что «сервер недоступен», и пользователю нужно
+ * разное действие в ответ.
+ */
+function failureTitle(status, errorCode) {
+  if (status === SESSION_STATUS.SERVER_ERROR) return 'Сервер недоступен';
+  if (status === SESSION_STATUS.DISCONNECTED) return 'Соединение с сервером потеряно';
+
+  switch (errorCode) {
+    case ERROR_CODES.ROOM_FULL:
+      return 'Комната заполнена';
+    case ERROR_CODES.INVALID_NAME:
+      return 'Имя не принято';
+    case ERROR_CODES.INVALID_ROOM:
+      return 'Некорректная ссылка';
+    default:
+      return 'Не удалось войти в комнату';
+  }
 }

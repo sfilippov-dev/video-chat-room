@@ -37,6 +37,9 @@ const JOIN_ERROR_TEXT = {
 export function useRoomSession({ roomId, name }) {
   const [status, setStatus] = useState(SESSION_STATUS.ACQUIRING);
   const [error, setError] = useState(null);
+  // Код отказа нужен экрану, чтобы назвать причину заголовком, а не только
+  // абзацем текста: «Комната заполнена» и «Имя не принято» — разные истории.
+  const [errorCode, setErrorCode] = useState(null);
   const [selfId, setSelfId] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -197,6 +200,7 @@ export function useRoomSession({ roomId, name }) {
           media.stopAll();
           socket.disconnect();
           setStatus(SESSION_STATUS.REJECTED);
+          setErrorCode(ack?.code ?? null);
           setError(JOIN_ERROR_TEXT[ack?.code] ?? 'Не удалось войти в комнату.');
           return;
         }
@@ -265,6 +269,7 @@ export function useRoomSession({ roomId, name }) {
   return {
     status,
     error,
+    errorCode,
     selfId,
     participants,
     messages,

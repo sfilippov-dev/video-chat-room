@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import JoinScreen from './components/JoinScreen.jsx';
 import RoomScreen from './components/RoomScreen.jsx';
+import { NoticeScreen } from './components/Notice.jsx';
 import { checkBrowserSupport } from './lib/browserSupport.js';
 import {
   readRoomIdFromPath,
@@ -44,12 +45,10 @@ export default function App() {
 
   if (!support.supported) {
     return (
-      <main className="shell shell--narrow">
-        <h1 className="title">Видеочат</h1>
-        <p className="notice notice--error" role="alert">
-          {UNSUPPORTED_TEXT[support.reason]}
-        </p>
-      </main>
+      <NoticeScreen
+        title={support.reason === 'insecure' ? 'Нужно защищённое соединение' : 'Браузер не поддерживается'}
+        text={UNSUPPORTED_TEXT[support.reason]}
+      />
     );
   }
 

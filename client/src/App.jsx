@@ -1,55 +1,82 @@
 import { useEffect, useState } from 'react';
 
-import { createSocket, destroySocket } from './lib/socket.js';
+import JoinScreen from './components/JoinScreen.jsx';
+import RoomScreen from './components/RoomScreen.jsx';
+import { checkBrowserSupport } from './lib/browserSupport.js';
+import {
+  readRoomIdFromPath,
+  navigateToRoom,
+  navigateToStart,
+  createRoomId,
+} from './lib/routing.js';
+
+const UNSUPPORTED_TEXT = {
+  webrtc: 'Ваш браузер не поддерживает WebRTC. Откройте приложение в Chrome, Firefox или Edge версии 100 и новее.',
+  'media-devices':
+    'Браузер не даёт доступ к камере и микрофону. Обновите его до актуальной версии.',
+  insecure:
+    'Камера и микрофон доступны только на защищённом соединении. Откройте приложение по адресу localhost или по HTTPS.',
+};
 
 /**
- * Каркас приложения. Пока показывает только состояние сигнального соединения —
- * это опора для проверки следующих задач: экраны, медиа и mesh появятся дальше.
+ * Корневой компонент: разбирает адрес и решает, какой экран показать.
+ *
+ * Имя живёт только в состоянии React. Перезагрузка страницы — это новый вход
+ * с повторным вводом имени: сохранять что-либо на клиенте запрещено.
  */
 export default function App() {
-  const [status, setStatus] = useState('connecting');
-  const [socketConnected, setSocketConnected] = useState(false);
+  const [roomId, setRoomId] = useState(() => readRoomIdFromPath());
+  const [name, setName] = useState(null);
+  const [support] = useState(() => checkBrowserSupport());
 
   useEffect(() => {
-    const socket = createSocket();
+    // Кнопки «назад» и «вперёд» не должны оставлять пользователя в комнате,
+    // адрес которой он уже покинул.
+    function handlePopState() {
+      const nextRoomId = readRoomIdFromPath();
+      setRoomId(nextRoomId);
+      if (!nextRoomId) setName(null);
+    }
 
-    const onConnect = () => {
-      setStatus('connected');
-      setSocketConnected(true);
-    };
-    const onDisconnect = () => {
-      setStatus('disconnected');
-      setSocketConnected(false);
-    };
-    const onError = () => {
-      setStatus('error');
-      setSocketConnected(false);
-    };
-
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
-    socket.on('connect_error', onError);
-    socket.connect();
-
-    return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
-      socket.off('connect_error', onError);
-      destroySocket();
-    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const statusText = {
-    connecting: 'подключение к серверу…',
-    connected: 'сигнальный сервер подключён',
-    disconnected: 'соединение с сервером закрыто',
-    error: 'сервер недоступен',
-  }[status];
+  if (!support.supported) {
+    return (
+      <main className="shell shell--narrow">
+        <h1 className="title">Видеочат</h1>
+        <p className="notice notice--error" role="alert">
+          {UNSUPPORTED_TEXT[support.reason]}
+        </p>
+      </main>
+    );
+  }
 
-  return (
-    <main className="shell">
-      <h1>Видеочат</h1>
-      <p className={socketConnected ? 'status status--ok' : 'status status--wait'}>{statusText}</p>
-    </main>
-  );
+  function handleCreateRoom(enteredName) {
+    const newRoomId = createRoomId();
+    setName(enteredName);
+    setRoomId(newRoomId);
+    navigateToRoom(newRoomId);
+  }
+
+  function handleJoinRoom(enteredName) {
+    setName(enteredName);
+  }
+
+  function handleLeave() {
+    setName(null);
+    setRoomId(null);
+    navigateToStart();
+  }
+
+  if (!roomId) {
+    return <JoinScreen mode="create" onSubmit={handleCreateRoom} />;
+  }
+
+  if (!name) {
+    return <JoinScreen mode="join" onSubmit={handleJoinRoom} />;
+  }
+
+  return <RoomScreen roomId={roomId} name={name} onLeave={handleLeave} />;
 }

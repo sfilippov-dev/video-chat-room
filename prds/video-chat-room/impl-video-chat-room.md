@@ -129,7 +129,7 @@
 
 ## Фаза 3. Клиент: WebRTC mesh
 
-- [ ] 14. **`MeshConnectionManager`: создание соединений и обмен SDP** · `Frontend`
+- [x] 14. **`MeshConnectionManager`: создание соединений и обмен SDP** · `Frontend`
   - Набор `RTCPeerConnection` по одному на участника; оффер шлёт только старожил.
   - 14.1. `createConnection(peerId, {asInitiator})`: `addTransceiver('audio')` и `addTransceiver('video')` **всегда**, затем `replaceTrack` имеющимися дорожками.
   - 14.2. Инициатор по `peer-joined`: `createOffer` → `setLocalDescription` → `signal:offer`.

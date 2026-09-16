@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EVENTS, ERROR_CODES } from '../lib/events.js';
 import { createSocket, destroySocket } from '../lib/socket.js';
 import { LocalMediaController } from '../lib/LocalMediaController.js';
+import { MeshConnectionManager } from '../lib/MeshConnectionManager.js';
+import { ICE_SERVERS } from '../config.js';
 
 /**
  * Состояния сессии.
@@ -53,6 +55,7 @@ export function useRoomSession({ roomId, name }) {
 
   const mediaRef = useRef(null);
   const socketRef = useRef(null);
+  const meshRef = useRef(null);
   const leftRef = useRef(false);
 
   const media = useMemo(() => {
@@ -64,10 +67,16 @@ export function useRoomSession({ roomId, name }) {
     let cancelled = false;
     leftRef.current = false;
 
-    const unsubscribe = media.on('state-changed', (next) => {
+    const unsubscribeState = media.on('state-changed', (next) => {
       setMediaState(next);
       // Состояние устройств нужно остальным для индикации на плитке.
       socketRef.current?.emit(EVENTS.MEDIA_STATE, { micOn: next.micOn, camOn: next.camOn });
+    });
+
+    // Видеодорожка пересоздаётся при каждом включении камеры, поэтому её
+    // нужно подменить во всех соединениях сразу.
+    const unsubscribeTrack = media.on('video-track-changed', (track) => {
+      meshRef.current?.replaceVideoTrack(track);
     });
 
     async function start() {
@@ -80,6 +89,13 @@ export function useRoomSession({ roomId, name }) {
       setStatus(SESSION_STATUS.JOINING);
       const socket = createSocket();
       socketRef.current = socket;
+
+      const mesh = new MeshConnectionManager({
+        socket,
+        iceServers: ICE_SERVERS,
+        getLocalTracks: () => ({ audio: media.audioTrack, video: media.videoTrack }),
+      });
+      meshRef.current = mesh;
 
       socket.on('connect_error', () => {
         if (cancelled) return;
@@ -113,6 +129,20 @@ export function useRoomSession({ roomId, name }) {
         setMessages((current) => [...current, message]);
       });
 
+      // Пришёл новый участник — значит мы старожил и наша задача начать
+      // согласование. Новичок в ответ офферов не шлёт.
+      socket.on(EVENTS.PEER_JOINED, ({ id }) => {
+        mesh.createConnection(id, { asInitiator: true });
+      });
+
+      socket.on(EVENTS.SIGNAL_OFFER, ({ fromId, sdp }) => {
+        mesh.handleOffer(fromId, sdp);
+      });
+
+      socket.on(EVENTS.SIGNAL_ANSWER, ({ fromId, sdp }) => {
+        mesh.handleAnswer(fromId, sdp);
+      });
+
       socket.connect();
 
       // 3. Вход в комнату. Ответ сервера — вердикт: лимит проверяется там.
@@ -128,6 +158,12 @@ export function useRoomSession({ roomId, name }) {
           setError(JOIN_ERROR_TEXT[ack?.code] ?? 'Не удалось войти в комнату.');
           return;
         }
+
+        // Соединения с теми, кто уже в комнате, создаём сразу: они вот-вот
+        // пришлют офферы, и к этому моменту всё должно быть готово.
+        ack.participants.forEach((participant) => {
+          mesh.createConnection(participant.id, { asInitiator: false });
+        });
 
         setSelfId(ack.selfId);
         setParticipants([
@@ -150,7 +186,10 @@ export function useRoomSession({ roomId, name }) {
 
     return () => {
       cancelled = true;
-      unsubscribe();
+      unsubscribeState();
+      unsubscribeTrack();
+      meshRef.current?.closeAll();
+      meshRef.current = null;
       media.stopAll();
       destroySocket();
       socketRef.current = null;
@@ -163,6 +202,8 @@ export function useRoomSession({ roomId, name }) {
   const leave = useCallback(() => {
     leftRef.current = true;
     socketRef.current?.emit(EVENTS.LEAVE);
+    meshRef.current?.closeAll();
+    meshRef.current = null;
     media.stopAll();
     destroySocket();
     socketRef.current = null;

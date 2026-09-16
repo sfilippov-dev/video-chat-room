@@ -147,6 +147,10 @@ body {
   border-color: var(--danger);
 }
 
+.notice--warning {
+  border-color: #b45309;
+}
+
 .status {
   color: var(--muted);
 }
@@ -163,4 +167,23 @@ body {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+.room-actions {
+  margin-top: 24px;
+}
+
+.participant-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.participant-list__item {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
 }

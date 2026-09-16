@@ -111,7 +111,7 @@
   - 11.4. `stopAll()` для выхода и для отказа в слоте.
   - _Requirements: 13, 14, 20, 33, US-6, US-7, US-12, Design: §4.2, §8.2, §8.4, §9.5_
 
-- [ ] 12. **Сессия комнаты: `useRoomSession`** · `Frontend`
+- [x] 12. **Сессия комнаты: `useRoomSession`** · `Frontend`
   - Конечный автомат `idle → acquiring → joining → in_room` и оркестрация сокета, медиа и состояния.
   - 12.1. `client/src/hooks/useRoomSession.js`: порядок «клик (жест пользователя) → `getUserMedia` → `socket.connect()` → `join` с ack».
   - 12.2. Разбор ack: `in_room` / `rejected` (`ROOM_FULL`) / `server_error`; при `ROOM_FULL` — немедленный `stopAll()` и отключение сокета.

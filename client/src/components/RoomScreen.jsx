@@ -1,5 +1,6 @@
 import { useRoomSession, SESSION_STATUS } from '../hooks/useRoomSession.js';
 import VideoGrid from './VideoGrid.jsx';
+import ControlBar from './ControlBar.jsx';
 
 /**
  * Экран комнаты. Видеосетка, панель управления и чат подключаются следующими
@@ -65,6 +66,12 @@ export default function RoomScreen({ roomId, name, onLeave }) {
         localStream={session.localStream}
         remoteStreams={session.remoteStreams}
         failedPeers={session.failedPeers}
+      />
+
+      <ControlBar
+        micOn={session.mediaState.micOn}
+        hasMic={session.mediaState.hasMic}
+        onToggleMic={session.toggleMic}
       />
     </main>
   );

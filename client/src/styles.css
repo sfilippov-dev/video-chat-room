@@ -281,3 +281,21 @@ body {
   top: 12px;
   right: 12px;
 }
+
+/* Панель управления устройствами */
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.controls__button {
+  min-width: 220px;
+}
+
+.controls__button--off {
+  border-color: var(--danger);
+  color: var(--danger);
+}

@@ -12,6 +12,14 @@ import { MutedMicIcon, SilhouetteIcon } from './icons.jsx';
  *
  * Про muted на своей плитке. Это не косметика: без него собственный микрофон
  * играет в собственные динамики и даёт эхо и свист.
+ *
+ * Про зеркало на своей плитке. Камера смотрит на человека со стороны
+ * собеседника, поэтому неотражённая картинка меняет лево и право местами:
+ * поправляя кадр, человек двигает себя не в ту сторону. Отражение живёт в CSS
+ * и касается только этого элемента на этом экране — дорожка, которая уходит
+ * собеседникам, не меняется, и надпись перед чужой камерой у всех читается
+ * как надпись. Подпись, значок микрофона и заглушка лежат снаружи <video>,
+ * поэтому в зеркало не попадают.
  */
 export default function VideoTile({ participant, stream, isSelf, connectionFailed, deviceLost }) {
   const videoRef = useRef(null);
@@ -70,7 +78,10 @@ export default function VideoTile({ participant, stream, isSelf, connectionFaile
     <div className={`tile${isSelf ? ' tile--self' : ''}`}>
       <video
         ref={videoRef}
-        className={`tile__video${showVideo ? '' : ' tile__video--hidden'}`}
+        className={
+          `tile__video${showVideo ? '' : ' tile__video--hidden'}` +
+          `${isSelf ? ' tile__video--mirrored' : ''}`
+        }
         autoPlay
         playsInline
         muted={isSelf}

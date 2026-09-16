@@ -10,7 +10,45 @@
  * Тёмная тема здесь не тема, а единственный режим: видеозвонок смотрят на
  * тёмном фоне, чтобы плитки с картинкой были самым светлым на экране.
  */
+@property --sheen-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 :root {
+  /*
+   * Два шрифта и ни одним больше. IBM Plex Sans — рабочий: им набрано всё, от
+   * подписи под кнопкой до реплики в чате. Unbounded — акцидентный: только
+   * заголовки экранов, где важен не объём текста, а то, чей это продукт.
+   *
+   * Системный стек идёт следом не для красоты: пока веб-шрифт летит по сети (а
+   * при её отсутствии — всегда) интерфейс рисуется им. Поэтому в стеке стоят
+   * гротески с близкими пропорциями, и подмена не переставляет строки.
+   */
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Unbounded', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI',
+    Roboto, sans-serif;
+
+  /*
+   * Межбуквенный интервал — функция кегля, а не вкус. Крупный текст набран
+   * плотнее: на 32 пикселях зазоры, нормальные для 13-ти, читаются как дыры.
+   * Мелкий и капительный, наоборот, разрежены — иначе прописные слипаются.
+   */
+  --tracking-display: -0.045em;
+  --tracking-title: -0.03em;
+  --tracking-lead: -0.01em;
+  --tracking-caps: 0.06em;
+
+  /*
+   * Кривые движения. Одна «выездная» — быстро стартует, мягко тормозит, ей
+   * двигают всё, что приезжает на место. Одна пружинная с перелётом — ей
+   * отвечают на нажатие и появление. Третьей не нужно.
+   */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
   /* Нейтральная палитра: от фона страницы к приподнятым поверхностям. */
   --bg: #181b1d;
   --surface: #202427;
@@ -52,7 +90,7 @@
   --fs-md: 15px;
   --fs-lg: 18px;
   --fs-xl: 22px;
-  --fs-2xl: 30px;
+  --fs-2xl: 32px;
 
   /* Высота элементов управления: поле ввода и кнопка рядом должны совпадать. */
   --control-height: 46px;
@@ -72,10 +110,11 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   font-size: var(--fs-md);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .shell {
@@ -99,20 +138,81 @@ body {
   text-align: center;
 }
 
+/*
+ * Стартовый экран собирается по очереди: заголовок, пояснение, карточка, а
+ * внутри неё — поле и кнопка. Задержки маленькие и идут строго сверху вниз,
+ * тем же порядком, в каком экран читают. Смысл не в нарядности: очередь
+ * заканчивается ровно на кнопке, то есть взгляд приводят к тому месту, где от
+ * человека чего-то ждут. Экраны отказа и ожидания используют ту же разметку и
+ * получают то же появление — отдельного правила им не нужно.
+ *
+ * Карточка только проявляется, без сдвига: она уже двигает своё содержимое, и
+ * два движения друг поверх друга складывались бы в рывок.
+ */
+.shell--narrow > .title {
+  animation: rise-in 260ms var(--ease-out) both;
+}
+
+.shell--narrow > .subtitle {
+  animation: rise-in 260ms var(--ease-out) 60ms both;
+}
+
+.shell--narrow > .card,
+.shell--narrow > .notice {
+  animation: fade-in 260ms ease 110ms both;
+}
+
+.shell--narrow > .note {
+  animation: rise-in 260ms var(--ease-out) 260ms both;
+}
+
+.join-form > .field {
+  animation: rise-in 260ms var(--ease-out) 170ms both;
+}
+
+.join-form > .button {
+  animation: rise-in 260ms var(--ease-spring) 220ms both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * Комната шире прочих экранов, и намеренно. 1280px хватало странице с текстом,
+ * но здесь содержимое — картинка: каждый лишний пиксель ширины превращается в
+ * пиксель на лице собеседника. Поля по краям на широком мониторе оставались
+ * пустыми, пока плитки стояли мелкими, — ровно наоборот тому, ради чего окно
+ * растягивают. Предел всё же есть: за 1760px строка чата становится длиннее
+ * удобной для чтения, а сетка всё равно упирается в высоту окна.
+ */
 .shell--room {
+  max-width: 1760px;
   padding-top: var(--space-5);
   padding-bottom: var(--space-5);
 }
 
 .title {
   margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
   font-size: var(--fs-2xl);
-  font-weight: 650;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.2;
 }
 
 .title--small {
   font-size: var(--fs-xl);
+  letter-spacing: var(--tracking-title);
 }
 
 .subtitle {
@@ -120,6 +220,7 @@ body {
   max-width: 42ch;
   color: var(--muted);
   font-size: var(--fs-md);
+  letter-spacing: var(--tracking-lead);
 }
 
 .note {
@@ -184,6 +285,7 @@ body {
 .field__input--large {
   height: 54px;
   font-size: var(--fs-lg);
+  letter-spacing: var(--tracking-lead);
 }
 
 .field__hint {
@@ -197,6 +299,7 @@ body {
   margin: 0;
   color: var(--danger);
   font-size: var(--fs-sm);
+  animation: badge-in 240ms var(--ease-out) both;
 }
 
 /* Кнопки */
@@ -215,12 +318,23 @@ body {
   font-family: inherit;
   font-size: var(--fs-md);
   cursor: pointer;
-  transition: background-color 0.12s ease, border-color 0.12s ease;
+  transition: background-color 150ms ease, border-color 150ms ease,
+    transform 180ms var(--ease-spring);
 }
 
 .button:hover:not(:disabled) {
   background: var(--border);
   border-color: var(--border-strong);
+}
+
+/*
+ * Вдавливание при нажатии. Это не украшение: между кликом и ответом системы —
+ * сеть, и подтвердить нажатие нужно раньше, чем придёт результат. Масштаб
+ * маленький и время короткое, чтобы кнопка отвечала, а не играла.
+ */
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 150ms;
 }
 
 .button:focus-visible {
@@ -266,12 +380,23 @@ body {
   background: var(--surface-raised);
   color: var(--text);
   cursor: pointer;
-  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  /*
+   * Точка отсчёта масштаба — низ кнопки: панель ведёт себя как док, кнопка
+   * растёт вверх, а не расползается в стороны и не наезжает на свою подпись.
+   */
+  transform-origin: 50% 100%;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease,
+    transform 200ms var(--ease-spring);
 }
 
 .icon-button:hover:not(:disabled) {
   background: var(--border);
   border-color: var(--border-strong);
+}
+
+.icon-button:active:not(:disabled) {
+  transform: scale(0.93);
+  transition-duration: 150ms;
 }
 
 .icon-button:focus-visible {
@@ -292,6 +417,36 @@ body {
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/*
+ * Трубка нарисована заливкой, а не обводкой. Контурный силуэт трубки в 20
+ * пикселей превращается в клубок линий: у неё нет длинных прямых, за которые
+ * цеплялся бы глаз, — только две дуги и два утолщения на концах. Залитый глиф
+ * держит форму на любом кегле, а сплошной красный фон кнопки и без того
+ * отделяет выход от остальной панели.
+ */
+.icon-button__glyph--solid {
+  fill: currentColor;
+  stroke: none;
+}
+
+/*
+ * Перечёркивание прорисовывается по длине штриха. Момент переключения так
+ * называется явно: линия не возникает поверх иконки готовой, а проводится
+ * слева направо, как её провели бы рукой. pathLength="1" в разметке
+ * позволяет не пересчитывать реальную длину пути при правке иконки.
+ */
+.icon-glyph__slash {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: slash-draw 220ms var(--ease-out) forwards;
+}
+
+@keyframes slash-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /*
@@ -359,12 +514,14 @@ body {
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.12s ease;
+  transform: translate(-50%, 4px);
+  transition: opacity 150ms ease, transform 200ms var(--ease-out);
 }
 
 .icon-button:hover .icon-button__tip,
 .icon-button:focus-visible .icon-button__tip {
   opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* Сообщения и состояния */
@@ -383,6 +540,30 @@ body {
   border-radius: var(--radius);
   background: var(--surface-raised);
   text-align: left;
+  animation: badge-in 240ms var(--ease-out) both;
+}
+
+/*
+ * Плашки состояний приезжают, а не возникают.
+ *
+ * Сообщение, появившееся мгновенно, неотличимо от сообщения, висевшего там всё
+ * время: глаз не получает подсказки, что именно изменилось, и человек
+ * перечитывает весь экран. Короткий выезд помечает плашку как новую. Оттенки
+ * направления не случайны: то, что встаёт в поток, приподнимается снизу, а то,
+ * что прижато к верхнему краю плитки, — опускается сверху, из-за своей границы.
+ */
+@keyframes badge-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes badge-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
 }
 
 .notice__icon {
@@ -469,7 +650,7 @@ body {
   margin: 0;
   font-size: var(--fs-sm);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -505,6 +686,20 @@ body {
   font-size: var(--fs-sm);
   font-weight: 600;
   text-transform: uppercase;
+  animation: avatar-pop 260ms var(--ease-spring) both;
+}
+
+/*
+ * Кружок нового участника вскакивает с коротким отскоком. Список состава —
+ * единственное место, где приход человека виден целиком, а строка текста,
+ * подставленная в середину списка, легко проходит мимо внимания: движение
+ * замечается периферийным зрением, статичная строка — нет.
+ */
+@keyframes avatar-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
 }
 
 .participant-list__item--self .participant-list__avatar {
@@ -545,6 +740,20 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-sunken);
+  animation: tile-in 260ms var(--ease-spring) both;
+}
+
+/*
+ * Появление плитки. Состав комнаты меняется без предупреждения, и плитка,
+ * возникшая мгновенно, воспринимается как подёргивание раскладки: соседние
+ * плитки в этот момент и так меняют размер. Короткий наплыв с подрастанием
+ * привязывает движение соседей к причине — пришёл человек.
+ */
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
 }
 
 /*
@@ -556,11 +765,78 @@ body {
   border-color: rgba(44, 104, 250, 0.42);
 }
 
+/*
+ * По контуру своей плитки медленно едет светлый участок. Задача у него одна:
+ * не давая себя разглядывать, держать ответ на вопрос «где здесь я» доступным
+ * боковым зрением — на сетке из четырёх одинаковых прямоугольников статичная
+ * обводка теряется. Отсюда и параметры: шесть секунд на оборот, узкая дуга,
+ * низкая непрозрачность. Всё, что быстрее или ярче, во время разговора
+ * превращается в мигающую лампочку.
+ *
+ * Рамка нарисована конической заливкой, из которой маской вырезана середина:
+ * градиент не умеет идти по периметру, поэтому вращается он, а не свет.
+ * Браузер без @property просто не анимирует угол — останется ровная обводка,
+ * то же, что было раньше.
+ */
+.tile--self::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--sheen-angle),
+    transparent 0deg,
+    transparent 200deg,
+    rgba(120, 165, 255, 0.5) 260deg,
+    rgba(176, 205, 255, 0.72) 280deg,
+    rgba(120, 165, 255, 0.5) 300deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: tile-sheen 6s linear infinite;
+}
+
+@keyframes tile-sheen {
+  to {
+    --sheen-angle: 360deg;
+  }
+}
+
 .tile__video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   background: var(--surface-sunken);
+}
+
+/*
+ * Своё видео показывается зеркальным.
+ *
+ * Это не эффект, а исправление: камера смотрит на человека, а не его глазами,
+ * поэтому неотражённая картинка меняет местами лево и право. Поднимаешь руку
+ * справа — на экране она слева, и всякая попытка поправить кадр идёт в обратную
+ * сторону. В зеркало человек смотрится всю жизнь, и собственное изображение
+ * узнаётся именно таким.
+ *
+ * Отражается ровно этот элемент. Дорожка, которая уходит собеседникам, не
+ * меняется вовсе: transform живёт в отрисовке страницы и до WebRTC не
+ * доезжает, так что надпись на футболке участника все увидят правильно.
+ * Остальным участникам зеркало не положено по той же причине — их видео мы
+ * видим так, как его видит их камера, и текст перед объективом должен
+ * читаться.
+ *
+ * Подпись с именем, значок микрофона, заглушка и плашки ошибок лежат соседями
+ * этого элемента, а не внутри него, поэтому отражение их не касается: буквы
+ * остаются буквами.
+ */
+.tile__video--mirrored {
+  transform: scaleX(-1);
 }
 
 .tile__video--hidden {
@@ -655,6 +931,7 @@ body {
   -webkit-backdrop-filter: blur(10px);
   color: var(--danger);
   font-size: var(--fs-sm);
+  animation: badge-in-down 240ms var(--ease-out) both;
 }
 
 .tile__error--warning {
@@ -713,10 +990,58 @@ body {
 
 /* Кнопка с постоянной подписью под иконкой. */
 .control {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);
+}
+
+/*
+ * Магнитный док.
+ *
+ * Кнопка под курсором приподнимается и растёт, соседние — втрое слабее. Смысл
+ * не в эффекте: увеличенная кнопка расширяет собственную зону промаха, а
+ * подросшие соседи подсказывают, куда курсор поедет дальше. Отсюда и разница в
+ * силе — притяжение должно спадать, иначе панель просто пульсирует целиком.
+ *
+ * Предыдущего соседа выбирает :has(+ ...): «элемент, за которым сразу идёт
+ * наведённый». Без него эффект был бы односторонним, а док — перекошенным.
+ * Разделитель перед кнопкой выхода рвёт цепочку соседства намеренно: выход и
+ * не должен подрастать заодно с микрофоном, его отделили как раз затем, чтобы
+ * не задевать случайно.
+ *
+ * Всё это живёт под hover: hover — на устройствах с мышью. На тач-экране
+ * :hover залипает после касания, и кнопка осталась бы увеличенной навсегда.
+ */
+@media (hover: hover) {
+  .control:hover {
+    z-index: 1;
+  }
+
+  .control:hover > .icon-button:not(:disabled) {
+    transform: translateY(-5px) scale(1.16);
+  }
+
+  .control:hover + .control > .icon-button:not(:disabled),
+  .control:has(+ .control:hover) > .icon-button:not(:disabled) {
+    transform: translateY(-2px) scale(1.06);
+  }
+
+  /* Нажатие поверх подъёма: кнопка проседает, но не падает обратно в строй. */
+  .control:hover > .icon-button:not(:disabled):active {
+    transform: translateY(-2px) scale(1.06);
+    transition-duration: 150ms;
+  }
+
+  /*
+   * Подсказка лежит внутри кнопки и увеличивалась бы вместе с ней. Обратный
+   * масштаб возвращает подписи исходный кегль: текст не должен прыгать в
+   * размере от того, что курсор оказался рядом.
+   */
+  .control:hover > .icon-button:not(:disabled) .icon-button__tip {
+    transform: translate(-50%, 0) scale(0.862);
+  }
 }
 
 /*
@@ -733,6 +1058,7 @@ body {
 
 .controls__hint {
   margin: 0;
+  animation: badge-in 240ms var(--ease-out) both;
 }
 
 .controls__fallback {
@@ -740,6 +1066,7 @@ body {
   gap: var(--space-1);
   width: 100%;
   max-width: 560px;
+  animation: badge-in 240ms var(--ease-out) both;
 }
 
 /* Раскладка комнаты и чат */
@@ -791,7 +1118,7 @@ body {
   margin: 0;
   font-size: var(--fs-sm);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -815,6 +1142,19 @@ body {
   gap: 2px;
   font-size: var(--fs-sm);
   overflow-wrap: anywhere;
+  animation: chat-in 240ms var(--ease-out) both;
+}
+
+/*
+ * Реплика выезжает снизу — оттуда же, откуда её отправили, из поля под лентой.
+ * Направление здесь несёт смысл: движение снизу вверх читается как «пришло
+ * новое», а не «список перерисовался».
+ */
+@keyframes chat-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 /*
@@ -835,11 +1175,23 @@ body {
 }
 
 /* Системные строки — по центру, мельче и серым: это фон событий, не разговор. */
+/*
+ * Системная строка проявляется мягче реплики и без сдвига: это не чьи-то
+ * слова, а отметка о событии. Она и набрана тише — движение должно быть тише
+ * ровно в той же мере.
+ */
 .chat__item--system {
   margin: var(--space-3) 0;
   color: var(--muted);
   font-size: var(--fs-xs);
   text-align: center;
+  animation: chat-fade 280ms ease both;
+}
+
+@keyframes chat-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 .chat__meta {
@@ -874,6 +1226,7 @@ body {
   margin: 0;
   color: var(--danger);
   font-size: var(--fs-sm);
+  animation: badge-in 240ms var(--ease-out) both;
 }
 
 /*
@@ -893,26 +1246,68 @@ body {
  * блока: один ряд из одной плитки, один ряд из двух, два ряда с зазором.
  *
  * --room-chrome — это высота всего, что делит окно с сеткой: поля страницы,
- * заголовок, панель управления и предупреждение о недоступных устройствах,
- * когда оно есть. Значение взято по худшему случаю, с предупреждением: без
- * него сетка окажется немного меньше возможного, зато никогда не выедет за
- * нижний край окна.
+ * заголовок, панель управления с местом под подтверждение «ссылка скопирована»
+ * и предупреждение о недоступных устройствах, когда оно есть.
+ *
+ * Значений два, и второе — не оптимизация, а возврат отнятого. Предупреждение
+ * появляется редко, но раньше его высота вычиталась из бюджета всегда, и в
+ * обычном звонке семьдесят пикселей окна просто не использовались: сетка
+ * стояла меньше, чем могла. Селектор :has() спрашивает у страницы, есть ли
+ * предупреждение на самом деле, и бюджет считается по факту. Записано через
+ * :not(:has(...)) намеренно: браузер, который не знает :has(), не поймёт всё
+ * правило целиком и останется на осторожном большом значении — то есть на
+ * прежнем поведении, а не на раскладке, выехавшей за нижний край.
  *
  * Ниже 1024px ничего этого не действует: там колонки уже сложены друг под
  * друга, высота окна перестаёт быть общим бюджетом, и ужимать видео не по
  * чему — страница просто прокручивается.
  */
 @media (min-width: 1024px) {
+  /*
+   * Высота задана точно, а не нижней границей, и это обязательное условие
+   * всего, что ниже.
+   *
+   * При min-height высота колонки остаётся «авто»: контейнер flex не знает
+   * своего главного размера заранее и считает его по содержимому, а потом
+   * только подтягивает до минимума. Раздавать в такой колонке нечего —
+   * flex: 1 у раскладки не получает доли окна, и высота снова приходит снизу,
+   * от самого длинного элемента. Так лента чата и распирала страницу: сколько
+   * сообщений, столько и высоты, невзирая на окно.
+   *
+   * С height высота известна сверху, и дальше она раздаётся по цепочке:
+   * раскладка получает остаток окна, боковая колонка — строку раскладки, лента
+   * — остаток колонки. Прокрутка появляется там, где ей и место: внутри ленты.
+   */
   .shell--room {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    --room-chrome: 280px;
+    height: 100vh;
+    --room-chrome: 312px;
   }
 
+  .shell--room:not(:has(.room-notice)) {
+    --room-chrome: 244px;
+  }
+
+  /*
+   * Единственная строка сетки объявлена явно, и это не формальность.
+   *
+   * Без grid-template-rows строка получается неявной и размечается по
+   * содержимому. Боковая колонка тогда вырастает во всю длину ленты чата: ряд
+   * тянется за самым высоким элементом, лента упирается в него, и высота у
+   * .chat__list оказывается не заданной ничем, кроме собственного текста.
+   * Прокручиваться внутри себя ей в таком виде нечем — она просто выталкивает
+   * страницу вниз, и после десятка сообщений у окна появлялась вертикальная
+   * прокрутка, хотя видеосетка честно уложилась в свой бюджет.
+   *
+   * minmax(0, 1fr) делает высоту строки равной высоте контейнера, а тот уже
+   * ограничен окном. Дальше цепочка определённых высот доходит до ленты, и та
+   * прокручивается сама — как и задумано было с самого начала.
+   */
   .room-layout {
     flex: 1;
     min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .room-main {
@@ -955,5 +1350,36 @@ body {
   .grid--3,
   .grid--4 {
     max-width: calc((100vh - var(--room-chrome) - var(--grid-gap)) * 16 / 9 + var(--grid-gap));
+  }
+}
+
+/*
+ * Системная настройка «уменьшить движение».
+ *
+ * Её ставят не из-за вкуса. Для части людей движение на экране — причина
+ * головокружения и тошноты, и просьба его убрать относится ко всему движению
+ * без разбора, а не к тому, которое разработчик счёл лишним. Поэтому правило
+ * не перечисляет анимации поимённо, а гасит их разом: любая, дописанная
+ * завтра, попадёт под него автоматически.
+ *
+ * Гасить — значит показать конечное состояние сразу, а не отменить его.
+ * Длительность в 1 мс вместо нуля оставляет анимацию состоявшейся: она
+ * доигрывает до конца и с fill-mode both удерживает финальный кадр. Обнулить
+ * её значило бы убрать и результат — плитки и реплики остались бы прозрачными.
+ * Ограничение повторов в один добивает бесконечные: подсветка по контуру своей
+ * плитки замирает, а не крутится бесшумным фоном.
+ *
+ * !important здесь уместен ровно потому, что это не оформление, а отмена
+ * оформления: правило обязано побеждать любую частную настройку выше.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
   }
 }

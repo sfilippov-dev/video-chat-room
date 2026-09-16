@@ -107,7 +107,7 @@ export default function ControlBar({
         <span className="controls__divider" aria-hidden="true" />
 
         <IconButton caption="Выйти" label="Выйти" onClick={onLeave} tone="danger">
-          <HangUpIcon className="icon-button__glyph" />
+          <HangUpIcon className="icon-button__glyph icon-button__glyph--solid" />
         </IconButton>
       </div>
 

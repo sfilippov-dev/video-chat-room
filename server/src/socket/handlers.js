@@ -7,6 +7,7 @@ import {
   getParticipants,
   getMessages,
   hasParticipant,
+  setMediaState,
 } from '../rooms.js';
 
 /**
@@ -33,6 +34,8 @@ export function registerHandlers(io, socket) {
   socket.on(EVENTS.SIGNAL_ICE, (payload) =>
     relaySignal(io, socket, EVENTS.SIGNAL_ICE, payload, 'candidate'),
   );
+
+  socket.on(EVENTS.MEDIA_STATE, (payload) => handleMediaState(io, socket, payload));
 }
 
 /**
@@ -169,4 +172,30 @@ function relaySignal(io, socket, event, payload, payloadKey) {
   if (!hasParticipant(roomId, targetId)) return;
 
   io.to(targetId).emit(event, { fromId: socket.id, [payloadKey]: content });
+}
+
+/**
+ * Состояние микрофона и камеры участника.
+ *
+ * Это исключительно индикация для интерфейса: фактическое прекращение передачи
+ * выполняет сам отправитель средствами WebRTC. Флаги держим на сервере, чтобы
+ * вошедший позже сразу увидел, у кого что выключено, и чтобы интерфейс не
+ * додумывал состояние по факту прихода медиапотока.
+ */
+function handleMediaState(io, socket, payload) {
+  const { roomId } = socket.data;
+  if (!roomId) return;
+
+  const data = payload ?? {};
+  const updated = setMediaState(roomId, socket.id, {
+    micOn: data.micOn,
+    camOn: data.camOn,
+  });
+  if (!updated) return;
+
+  io.to(roomId).emit(EVENTS.PEER_MEDIA_STATE, {
+    id: socket.id,
+    micOn: updated.micOn,
+    camOn: updated.camOn,
+  });
 }

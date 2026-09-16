@@ -173,8 +173,26 @@ body {
   margin-top: 24px;
 }
 
+.room-side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.participants {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.participants__title {
+  margin: 0;
+  font-size: 16px;
+}
+
 .participant-list {
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
   display: grid;
@@ -182,10 +200,11 @@ body {
 }
 
 .participant-list__item {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--surface-raised);
+  font-size: 14px;
 }
 
 /* Видеосетка: 1 плитка на весь экран, 2 в ряд, 3-4 в квадрат 2x2 */
@@ -289,10 +308,29 @@ body {
 /* Панель управления устройствами */
 
 .controls {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.controls__row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
-  margin-top: 16px;
+}
+
+.controls__hint {
+  margin: 0;
+  font-size: 14px;
+}
+
+.controls__fallback {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 560px;
 }
 
 .controls__button {
@@ -321,7 +359,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 70vh;
+  height: 58vh;
+  min-height: 300px;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 12px;

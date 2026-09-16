@@ -1,6 +1,7 @@
 import { useRoomSession, SESSION_STATUS } from '../hooks/useRoomSession.js';
 import VideoGrid from './VideoGrid.jsx';
 import ControlBar from './ControlBar.jsx';
+import ChatPanel from './ChatPanel.jsx';
 
 /**
  * Экран комнаты. Видеосетка, панель управления и чат подключаются следующими
@@ -60,23 +61,33 @@ export default function RoomScreen({ roomId, name, onLeave }) {
         </p>
       ) : null}
 
-      <VideoGrid
-        participants={session.participants}
-        selfId={session.selfId}
-        localStream={session.localStream}
-        remoteStreams={session.remoteStreams}
-        failedPeers={session.failedPeers}
-        mediaState={session.mediaState}
-      />
+      <div className="room-layout">
+        <div className="room-main">
+          <VideoGrid
+            participants={session.participants}
+            selfId={session.selfId}
+            localStream={session.localStream}
+            remoteStreams={session.remoteStreams}
+            failedPeers={session.failedPeers}
+            mediaState={session.mediaState}
+          />
 
-      <ControlBar
-        micOn={session.mediaState.micOn}
-        hasMic={session.mediaState.hasMic}
-        camOn={session.mediaState.camOn}
-        hasCam={session.mediaState.hasCam}
-        onToggleMic={session.toggleMic}
-        onToggleCamera={session.toggleCamera}
-      />
+          <ControlBar
+            micOn={session.mediaState.micOn}
+            hasMic={session.mediaState.hasMic}
+            camOn={session.mediaState.camOn}
+            hasCam={session.mediaState.hasCam}
+            onToggleMic={session.toggleMic}
+            onToggleCamera={session.toggleCamera}
+          />
+        </div>
+
+        <ChatPanel
+          messages={session.messages}
+          selfId={session.selfId}
+          onSend={session.sendMessage}
+        />
+      </div>
     </main>
   );
 }

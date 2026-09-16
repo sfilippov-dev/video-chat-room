@@ -303,3 +303,84 @@ body {
   border-color: var(--danger);
   color: var(--danger);
 }
+
+/* Чат */
+
+.room-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.room-main {
+  min-width: 0;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 70vh;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.chat__title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.chat__list {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat__item {
+  display: grid;
+  gap: 2px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.chat__item--system {
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+}
+
+.chat__meta {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.chat__author {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chat__item--own .chat__author {
+  color: var(--accent);
+}
+
+.chat__form {
+  display: flex;
+  gap: 8px;
+}
+
+.chat__error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}

@@ -11,7 +11,9 @@ export default mergeConfig(
   defineConfig({
     test: {
       environment: 'jsdom',
-      include: ['src/**/*.test.jsx'],
+      // .js наравне с .jsx: модули из src/lib компонентами не являются, но
+      // jsdom нужен и им — LocalMediaController работает с MediaStream.
+      include: ['src/**/*.test.{js,jsx}'],
       restoreMocks: true,
     },
   }),

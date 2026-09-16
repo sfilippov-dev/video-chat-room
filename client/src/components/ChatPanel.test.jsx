@@ -3,7 +3,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import ChatPanel from './ChatPanel.jsx';
-import { MESSAGE_TYPES } from '../lib/events.js';
+import { MESSAGE_TYPES, SYSTEM_EVENTS } from '../lib/events.js';
 
 afterEach(cleanup);
 
@@ -75,6 +75,38 @@ describe('ChatPanel', () => {
     );
 
     expect(list.scrollTop).toBe(640);
+  });
+
+  /**
+   * Имя приходит от пользователя, и род его приложению неизвестен. Проверяем
+   * именно это: в системной строке нет глагола, который пришлось бы
+   * согласовывать, — женское имя читается так же верно, как мужское.
+   */
+  it('говорит о входе и выходе без рода: «Имя в комнате» / «Имя больше не в комнате»', () => {
+    const system = (text, name) => ({
+      id: `s-${text}-${name}`,
+      type: MESSAGE_TYPES.SYSTEM,
+      authorId: null,
+      name,
+      text,
+      ts: new Date(2024, 0, 15, 9, 5).getTime(),
+    });
+
+    render(
+      <ChatPanel
+        messages={[
+          system(SYSTEM_EVENTS.JOINED, 'Вера'),
+          system(SYSTEM_EVENTS.LEFT, 'Вера'),
+          system(SYSTEM_EVENTS.JOINED, 'Алексей'),
+        ]}
+        selfId="p1"
+        onSend={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Вера в комнате')).toBeTruthy();
+    expect(screen.getByText('Вера больше не в комнате')).toBeTruthy();
+    expect(screen.getByText('Алексей в комнате')).toBeTruthy();
   });
 
   it('рендерит разметку из сообщения текстом, а не узлами DOM (XSS)', () => {

@@ -103,7 +103,7 @@
   - 10.4. Никакого `localStorage`/`sessionStorage`: имя между перезагрузками не запоминается.
   - _Requirements: 1, 2, 4, 28, 36, 38, US-1, US-2, US-4, US-13, Design: §4.2, §5.4, §5.5, §7.1, §8.1 (E-1…E-3, E-12)_
 
-- [ ] 11. **Локальные устройства: `LocalMediaController`** · `Frontend`
+- [x] 11. **Локальные устройства: `LocalMediaController`** · `Frontend`
   - Захват камеры и микрофона с деградацией: пользователь попадает в комнату при любом исходе.
   - 11.1. `client/src/lib/LocalMediaController.js`: `init()` с constraints 720p `ideal`, единый объект `MediaStream` на всю сессию.
   - 11.2. Разбор ошибок: `NotAllowedError`, `NotFoundError`, `NotReadableError`, `OverconstrainedError` → флаги `hasMic/hasCam`, `micOn/camOn`, текст ошибки.

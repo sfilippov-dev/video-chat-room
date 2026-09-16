@@ -228,7 +228,7 @@
   - 25.2. `npm run lint` и `npm test` проходят на зелёном.
   - _Requirements: 39, Design: §10.2, §12.6_
 
-- [ ] 26. **Production-сборка одной командой** · `DevOps`
+- [x] 26. **Production-сборка одной командой** · `DevOps`
   - Приложение поднимается одним процессом на одном origin.
   - 26.1. `npm run build` → `client/dist`; Express отдаёт статику и делает SPA-fallback (прямой заход по `/<roomId>` возвращает `index.html`, а не 404).
   - 26.2. `npm start` → `http://localhost:3001` полностью рабочее приложение.

@@ -118,7 +118,7 @@
   - 12.3. Хранение списка участников и их `micOn/camOn` из событий `participants` и `peer-media-state`.
   - _Requirements: 8, 26, 35, 37, US-5, US-13, Design: §4.2, §7.1, §8.3, §8.6, §8.7_
 
-- [ ] 13. **Видеосетка и self-view** · `Frontend`
+- [x] 13. **Видеосетка и self-view** · `Frontend`
   - Каркас экрана комнаты и собственная плитка до того, как появятся удалённые потоки.
   - 13.1. `RoomScreen.jsx`, `VideoGrid.jsx` (CSS Grid: 1 / 2 / 2×2), `VideoTile.jsx` с оверлеем имени.
   - 13.2. Self-view: `<video autoPlay playsInline muted>` — `muted` обязателен (иначе эхо и свист).

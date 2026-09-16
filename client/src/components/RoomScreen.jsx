@@ -1,4 +1,5 @@
 import { useRoomSession, SESSION_STATUS } from '../hooks/useRoomSession.js';
+import VideoGrid from './VideoGrid.jsx';
 
 /**
  * Экран комнаты. Видеосетка, панель управления и чат подключаются следующими
@@ -58,18 +59,13 @@ export default function RoomScreen({ roomId, name, onLeave }) {
         </p>
       ) : null}
 
-      <ul className="participant-list">
-        {session.participants.map((participant) => (
-          <li key={participant.id} className="participant-list__item">
-            {participant.name}
-            {participant.id === session.selfId ? ' (вы)' : ''}
-            {participant.micOn ? '' : ' · микрофон выключен'}
-            {participant.camOn ? '' : ' · камера выключена'}
-          </li>
-        ))}
-      </ul>
-
-      <p className="note">Идентификатор комнаты: {roomId}</p>
+      <VideoGrid
+        participants={session.participants}
+        selfId={session.selfId}
+        localStream={session.localStream}
+        remoteStreams={session.remoteStreams}
+        failedPeers={session.failedPeers}
+      />
     </main>
   );
 }

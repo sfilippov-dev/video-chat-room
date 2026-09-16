@@ -46,6 +46,11 @@ export function useRoomSession({ roomId, name }) {
     error: null,
   });
 
+  // Заполняются задачами про WebRTC: потоки соседей и плитки, чьё соединение
+  // не удалось установить.
+  const [remoteStreams, setRemoteStreams] = useState(() => new Map());
+  const [failedPeers, setFailedPeers] = useState(() => new Set());
+
   const mediaRef = useRef(null);
   const socketRef = useRef(null);
   const leftRef = useRef(false);
@@ -182,6 +187,8 @@ export function useRoomSession({ roomId, name }) {
     messages,
     mediaState,
     localStream: media.stream,
+    remoteStreams,
+    failedPeers,
     toggleMic,
     toggleCamera,
     sendMessage,

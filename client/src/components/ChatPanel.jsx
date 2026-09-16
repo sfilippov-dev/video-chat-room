@@ -101,7 +101,7 @@ export default function ChatPanel({ messages, selfId, onSend }) {
           aria-label="Отправить"
           title="Отправить"
         >
-          <SendIcon className="icon-button__glyph" />
+          <SendIcon className="icon-button__glyph icon-button__glyph--solid" />
         </button>
       </form>
 

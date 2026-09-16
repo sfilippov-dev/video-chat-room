@@ -73,6 +73,7 @@ export default function ControlBar({
     <div className="controls">
       <div className="controls__row">
         <IconButton
+          caption="Микрофон"
           label={micLabel}
           unavailableLabel={hasMic ? null : 'Микрофон недоступен'}
           onClick={onToggleMic}
@@ -84,6 +85,7 @@ export default function ControlBar({
         </IconButton>
 
         <IconButton
+          caption="Камера"
           label={camLabel}
           unavailableLabel={hasCam ? null : 'Камера недоступна'}
           onClick={handleToggleCamera}
@@ -98,13 +100,13 @@ export default function ControlBar({
           )}
         </IconButton>
 
-        <IconButton label="Копировать ссылку" onClick={handleCopy}>
+        <IconButton caption="Ссылка" label="Копировать ссылку" onClick={handleCopy}>
           <LinkIcon className="icon-button__glyph" />
         </IconButton>
 
         <span className="controls__divider" aria-hidden="true" />
 
-        <IconButton label="Выйти" onClick={onLeave} tone="danger">
+        <IconButton caption="Выйти" label="Выйти" onClick={onLeave} tone="danger">
           <HangUpIcon className="icon-button__glyph" />
         </IconButton>
       </div>
@@ -132,16 +134,27 @@ export default function ControlBar({
 }
 
 /**
- * Круглая кнопка панели: иконка вместо надписи, подпись всплывает.
+ * Круглая кнопка панели с постоянной подписью под иконкой.
  *
- * Подпись не пропадает, а меняет носитель. Пока кнопка живая, её показывает
- * собственная всплывашка в стиле интерфейса; выключенная кнопка в Chrome и
- * Safari вообще не получает событий мыши, поэтому там подпись отдаётся
- * браузеру через title. Два механизма никогда не работают одновременно, иначе
- * пользователь увидел бы две подсказки разом. Имя для чтения с экрана всегда
- * берётся из aria-label и от состояния кнопки не зависит.
+ * Подпись видна всегда и не зависит от наведения мыши: PRD в разделе 6 ставит
+ * очевидность управления выше эстетики, а иконка без слова рядом требует от
+ * пользователя догадки. Короткое существительное называет устройство
+ * («Микрофон»), а не текущее действие: оно не прыгает при каждом переключении,
+ * поэтому глазу не за чем следить, и панель не дёргается по ширине.
+ *
+ * Что именно произойдёт по нажатию, договаривает всплывающая подсказка
+ * («Выключить микрофон») — она дополняет подпись, а не заменяет её. Пока
+ * кнопка живая, подсказку рисует собственная всплывашка в стиле интерфейса;
+ * выключенная кнопка в Chrome и Safari вообще не получает событий мыши,
+ * поэтому там подсказка отдаётся браузеру через title. Два механизма никогда
+ * не работают одновременно, иначе пользователь увидел бы две подсказки разом.
+ *
+ * Для чтения с экрана имя кнопки берётся из aria-label с полным действием, а
+ * видимая подпись помечена aria-hidden: иначе скринридер произнёс бы
+ * «Микрофон» дважды подряд.
  */
 function IconButton({
+  caption,
   label,
   unavailableLabel = null,
   onClick,
@@ -154,21 +167,27 @@ function IconButton({
   const tip = unavailableLabel ?? label;
 
   return (
-    <button
-      className={`icon-button${off ? ' icon-button--off' : ''}${tone ? ` icon-button--${tone}` : ''}`}
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-pressed={pressed}
-      aria-label={label}
-      title={disabled ? tip : undefined}
-    >
-      {children}
-      {disabled ? null : (
-        <span className="icon-button__tip" aria-hidden="true">
-          {tip}
-        </span>
-      )}
-    </button>
+    <span className="control">
+      <button
+        className={`icon-button${off ? ' icon-button--off' : ''}${tone ? ` icon-button--${tone}` : ''}`}
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        aria-pressed={pressed}
+        aria-label={label}
+        title={disabled ? tip : undefined}
+      >
+        {children}
+        {disabled ? null : (
+          <span className="icon-button__tip" aria-hidden="true">
+            {tip}
+          </span>
+        )}
+      </button>
+
+      <span className="control__label" aria-hidden="true">
+        {caption}
+      </span>
+    </span>
   );
 }

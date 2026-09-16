@@ -96,6 +96,26 @@ export class MeshConnectionManager {
       this.emit('remote-stream', peerId, entry.stream);
     });
 
+    /**
+     * Недостижимый собеседник ломает одну плитку, а не приложение.
+     *
+     * TURN в проекте нет, поэтому за строгим симметричным NAT отдельная пара
+     * может не соединиться — PRD признаёт это допустимым. Остальные плитки,
+     * чат и состав комнаты при этом продолжают работать.
+     *
+     * Перезапуск ICE не делаем: без TURN шансы, что вторая попытка пройдёт
+     * там, где не прошла первая, невелики, а кода прибавляется заметно.
+     */
+    pc.addEventListener('iceconnectionstatechange', () => {
+      const state = pc.iceConnectionState;
+
+      if (state === 'failed') {
+        this.emit('connection-failed', peerId);
+      } else if (state === 'connected' || state === 'completed') {
+        this.emit('connection-restored', peerId);
+      }
+    });
+
     if (asInitiator) {
       const tracks = this.getLocalTracks();
       const audioTransceiver = pc.addTransceiver('audio', { direction: 'sendrecv' });

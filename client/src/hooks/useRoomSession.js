@@ -101,6 +101,19 @@ export function useRoomSession({ roomId, name }) {
         setRemoteStreams((current) => new Map(current).set(peerId, stream));
       });
 
+      mesh.on('connection-failed', (peerId) => {
+        setFailedPeers((current) => new Set(current).add(peerId));
+      });
+
+      mesh.on('connection-restored', (peerId) => {
+        setFailedPeers((current) => {
+          if (!current.has(peerId)) return current;
+          const next = new Set(current);
+          next.delete(peerId);
+          return next;
+        });
+      });
+
       socket.on('connect_error', () => {
         if (cancelled) return;
         setStatus(SESSION_STATUS.SERVER_ERROR);
@@ -149,6 +162,26 @@ export function useRoomSession({ roomId, name }) {
 
       socket.on(EVENTS.SIGNAL_ICE, ({ fromId, candidate }) => {
         mesh.handleIce(fromId, candidate);
+      });
+
+      // Участник вышел или отвалился: закрываем соединение и убираем следы,
+      // иначе останется плитка-призрак с замершим последним кадром.
+      socket.on(EVENTS.PEER_LEFT, ({ id }) => {
+        mesh.closeConnection(id);
+
+        setRemoteStreams((current) => {
+          if (!current.has(id)) return current;
+          const next = new Map(current);
+          next.delete(id);
+          return next;
+        });
+
+        setFailedPeers((current) => {
+          if (!current.has(id)) return current;
+          const next = new Set(current);
+          next.delete(id);
+          return next;
+        });
       });
 
       socket.connect();

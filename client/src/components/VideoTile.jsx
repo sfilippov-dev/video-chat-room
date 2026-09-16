@@ -25,14 +25,18 @@ export default function VideoTile({ participant, stream, isSelf, connectionFaile
       element.srcObject = stream ?? null;
     }
 
-    if (!stream) return undefined;
-
-    const played = element.play();
-    if (played?.catch) {
-      played.catch(() => setNeedsGesture(true));
+    if (stream) {
+      const played = element.play();
+      if (played?.catch) {
+        played.catch(() => setNeedsGesture(true));
+      }
     }
 
-    return undefined;
+    // Плитка исчезает вместе с участником: отпускаем поток, чтобы за ним не
+    // тянулся живой объект после выхода собеседника.
+    return () => {
+      element.srcObject = null;
+    };
   }, [stream, showVideo]);
 
   async function handleEnableSound() {

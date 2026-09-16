@@ -24,6 +24,16 @@ export class LocalMediaController {
     this.deviceLost = false;
 
     this.listeners = new Map();
+
+    /** Захват в полёте: повторный init() не должен запускать второй. */
+    this.initPromise = null;
+
+    /**
+     * Номер поколения захвата. Растёт при каждом stopAll и отсекает дорожки,
+     * которые приехали от getUserMedia уже после выхода из комнаты: принять
+     * такую — значит оставить камеру занятой навсегда.
+     */
+    this.generation = 0;
   }
 
   on(event, handler) {
@@ -62,11 +72,22 @@ export class LocalMediaController {
    * отсутствие камеры или занятый другим приложением микрофон не должны
    * выкидывать его из приложения — он просто входит с выключенными
    * устройствами и видит объяснение.
+   *
+   * Повторный вызов возвращает тот же промис и второго getUserMedia не делает.
+   * Это не оптимизация: React в StrictMode монтирует эффект дважды, и два
+   * независимых захвата дали бы по две живые дорожки на каждое устройство.
+   * Выключение камеры остановило бы только первую — вторая продолжала бы
+   * держать камеру, и аппаратная лампочка не погасла бы.
    */
-  async init() {
+  init() {
+    if (!this.initPromise) this.initPromise = this.acquire(this.generation);
+    return this.initPromise;
+  }
+
+  async acquire(generation) {
     const both = await this.request({ audio: true, video: VIDEO_CONSTRAINTS });
     if (both.ok) {
-      this.adoptTracks(both.stream);
+      this.adoptTracks(both.stream, generation);
       this.emit('state-changed', this.state);
       return this.state;
     }
@@ -78,8 +99,8 @@ export class LocalMediaController {
       this.requestVideo(),
     ]);
 
-    if (audio.ok) this.adoptTracks(audio.stream);
-    if (video.ok) this.adoptTracks(video.stream);
+    if (audio.ok) this.adoptTracks(audio.stream, generation);
+    if (video.ok) this.adoptTracks(video.stream, generation);
 
     if (!audio.ok && !video.ok) {
       this.error = describeMediaError(both.error ?? audio.error ?? video.error);
@@ -111,10 +132,16 @@ export class LocalMediaController {
     return this.request({ audio: false, video: true });
   }
 
-  adoptTracks(stream) {
+  adoptTracks(stream, generation) {
+    // Захват завершился уже после выхода из комнаты: такие дорожки не
+    // принимаем, а гасим сразу — иначе устройство останется занятым.
+    if (generation !== this.generation) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
     stream.getTracks().forEach((track) => {
-      this.stream.addTrack(track);
-      this.watchTrack(track);
+      this.attachTrack(track);
 
       if (track.kind === 'audio') {
         this.hasMic = true;
@@ -123,6 +150,34 @@ export class LocalMediaController {
         this.hasCam = true;
         this.camOn = true;
       }
+    });
+  }
+
+  /**
+   * Кладёт дорожку в общий поток, гарантируя одну дорожку на устройство.
+   *
+   * Если дорожка того же типа уже есть, старая останавливается и выбрасывается.
+   * Две живые дорожки с одной камеры — это ровно тот случай, когда выключение
+   * останавливает одну, а устройство остаётся занятым второй.
+   */
+  attachTrack(track) {
+    this.stream
+      .getTracks()
+      .filter((existing) => existing.kind === track.kind && existing !== track)
+      .forEach((existing) => {
+        this.stream.removeTrack(existing);
+        existing.stop();
+      });
+
+    this.stream.addTrack(track);
+    this.watchTrack(track);
+  }
+
+  /** Останавливает и выбрасывает все видеодорожки — ни одной live не остаётся. */
+  stopVideoTracks() {
+    this.stream.getVideoTracks().forEach((track) => {
+      this.stream.removeTrack(track);
+      track.stop();
     });
   }
 
@@ -189,11 +244,7 @@ export class LocalMediaController {
    */
   async toggleCamera() {
     if (this.camOn) {
-      const track = this.videoTrack;
-      if (track) {
-        this.stream.removeTrack(track);
-        track.stop();
-      }
+      this.stopVideoTracks();
 
       this.camOn = false;
       this.emit('video-track-changed', null);
@@ -201,6 +252,7 @@ export class LocalMediaController {
       return this.state;
     }
 
+    const generation = this.generation;
     const result = await this.requestVideo();
     if (!result.ok) {
       this.error = describeMediaError(result.error);
@@ -209,8 +261,15 @@ export class LocalMediaController {
     }
 
     const [track] = result.stream.getVideoTracks();
-    this.stream.addTrack(track);
-    this.watchTrack(track);
+
+    // Пока камера захватывалась, пользователь мог выйти из комнаты. Показывать
+    // эту дорожку уже некому, а жить она будет и дальше — гасим.
+    if (generation !== this.generation) {
+      track.stop();
+      return this.state;
+    }
+
+    this.attachTrack(track);
 
     this.hasCam = true;
     this.camOn = true;
@@ -227,6 +286,11 @@ export class LocalMediaController {
    * в слоте: у отвергнутого пятого участника лампочка гореть не должна.
    */
   stopAll() {
+    // Смена поколения отсекает захваты, которые сейчас в полёте: их дорожки
+    // приедут уже после выхода и будут остановлены, а не подложены в поток.
+    this.generation += 1;
+    this.initPromise = null;
+
     this.stream.getTracks().forEach((track) => {
       this.stream.removeTrack(track);
       track.stop();

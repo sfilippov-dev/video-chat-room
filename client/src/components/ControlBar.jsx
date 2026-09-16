@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
 
+import {
+  MicIcon,
+  MicOffIcon,
+  CameraIcon,
+  CameraOffIcon,
+  LinkIcon,
+  HangUpIcon,
+} from './icons.jsx';
+
 /**
  * Панель управления устройствами и ссылкой-приглашением.
  *
@@ -57,38 +66,47 @@ export default function ControlBar({
     }
   }
 
+  const micLabel = micOn ? 'Выключить микрофон' : 'Включить микрофон';
+  const camLabel = camOn ? 'Выключить камеру' : 'Включить камеру';
+
   return (
     <div className="controls">
       <div className="controls__row">
-        <button
-          className={`button controls__button${micOn ? '' : ' controls__button--off'}`}
-          type="button"
+        <IconButton
+          label={micLabel}
+          unavailableLabel={hasMic ? null : 'Микрофон недоступен'}
           onClick={onToggleMic}
           disabled={!hasMic}
-          aria-pressed={micOn}
-          title={hasMic ? undefined : 'Микрофон недоступен'}
+          pressed={micOn}
+          off={!micOn}
         >
-          {micOn ? 'Выключить микрофон' : 'Включить микрофон'}
-        </button>
+          {micOn ? <MicIcon className="icon-button__glyph" /> : <MicOffIcon className="icon-button__glyph" />}
+        </IconButton>
 
-        <button
-          className={`button controls__button${camOn ? '' : ' controls__button--off'}`}
-          type="button"
+        <IconButton
+          label={camLabel}
+          unavailableLabel={hasCam ? null : 'Камера недоступна'}
           onClick={handleToggleCamera}
           disabled={!hasCam || switchingCamera}
-          aria-pressed={camOn}
-          title={hasCam ? undefined : 'Камера недоступна'}
+          pressed={camOn}
+          off={!camOn}
         >
-          {camOn ? 'Выключить камеру' : 'Включить камеру'}
-        </button>
+          {camOn ? (
+            <CameraIcon className="icon-button__glyph" />
+          ) : (
+            <CameraOffIcon className="icon-button__glyph" />
+          )}
+        </IconButton>
 
-        <button className="button" type="button" onClick={handleCopy}>
-          Копировать ссылку
-        </button>
+        <IconButton label="Копировать ссылку" onClick={handleCopy}>
+          <LinkIcon className="icon-button__glyph" />
+        </IconButton>
 
-        <button className="button controls__leave" type="button" onClick={onLeave}>
-          Выйти
-        </button>
+        <span className="controls__divider" aria-hidden="true" />
+
+        <IconButton label="Выйти" onClick={onLeave} tone="danger">
+          <HangUpIcon className="icon-button__glyph" />
+        </IconButton>
       </div>
 
       {copyState === 'copied' ? (
@@ -110,5 +128,47 @@ export default function ControlBar({
         </label>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Круглая кнопка панели: иконка вместо надписи, подпись всплывает.
+ *
+ * Подпись не пропадает, а меняет носитель. Пока кнопка живая, её показывает
+ * собственная всплывашка в стиле интерфейса; выключенная кнопка в Chrome и
+ * Safari вообще не получает событий мыши, поэтому там подпись отдаётся
+ * браузеру через title. Два механизма никогда не работают одновременно, иначе
+ * пользователь увидел бы две подсказки разом. Имя для чтения с экрана всегда
+ * берётся из aria-label и от состояния кнопки не зависит.
+ */
+function IconButton({
+  label,
+  unavailableLabel = null,
+  onClick,
+  disabled = false,
+  pressed,
+  off = false,
+  tone = null,
+  children,
+}) {
+  const tip = unavailableLabel ?? label;
+
+  return (
+    <button
+      className={`icon-button${off ? ' icon-button--off' : ''}${tone ? ` icon-button--${tone}` : ''}`}
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={pressed}
+      aria-label={label}
+      title={disabled ? tip : undefined}
+    >
+      {children}
+      {disabled ? null : (
+        <span className="icon-button__tip" aria-hidden="true">
+          {tip}
+        </span>
+      )}
+    </button>
   );
 }

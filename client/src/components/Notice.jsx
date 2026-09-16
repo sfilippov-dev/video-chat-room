@@ -1,3 +1,5 @@
+import { AlertIcon } from './icons.jsx';
+
 /**
  * Сообщение о состоянии или сбое.
  *
@@ -8,15 +10,19 @@
 export default function Notice({ tone = 'error', text, actionLabel, onAction }) {
   return (
     <div className={`notice notice--${tone}`} role="alert">
-      <p className="notice__text">{text}</p>
+      <AlertIcon className="notice__icon" />
 
-      {actionLabel ? (
-        <p className="notice__actions">
-          <button className="button button--primary" type="button" onClick={onAction}>
-            {actionLabel}
-          </button>
-        </p>
-      ) : null}
+      <div className="notice__body">
+        <p className="notice__text">{text}</p>
+
+        {actionLabel ? (
+          <p className="notice__actions">
+            <button className="button button--primary" type="button" onClick={onAction}>
+              {actionLabel}
+            </button>
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

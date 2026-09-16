@@ -56,13 +56,15 @@ export default function RoomScreen({ roomId, name, onLeave }) {
   }
 
   return (
-    <main className="shell">
+    <main className="shell shell--room">
       <header className="room-header">
         <h1 className="title title--small">Комната</h1>
       </header>
 
       {session.mediaState.error ? (
-        <Notice tone="warning" text={session.mediaState.error} />
+        <div className="room-notice">
+          <Notice tone="warning" text={session.mediaState.error} />
+        </div>
       ) : null}
 
       <div className="room-layout">

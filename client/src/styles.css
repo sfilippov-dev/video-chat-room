@@ -1,18 +1,64 @@
+/*
+ * Единая система оформления.
+ *
+ * Всё, что повторяется, живёт здесь переменными: одна шкала отступов (шаг 4px),
+ * один радиус скругления плюс «таблетка» для круглых элементов, одна шкала
+ * размеров шрифта и один акцентный цвет на нейтральной палитре. Зелёный и
+ * красный акцентами не считаются: это цвета состояний (успех, опасность), они
+ * появляются только там, где состояние нужно назвать.
+ *
+ * Тёмная тема здесь не тема, а единственный режим: видеозвонок смотрят на
+ * тёмном фоне, чтобы плитки с картинкой были самым светлым на экране.
+ */
 :root {
-  --bg: #14161a;
-  --surface: #1e2229;
-  --surface-raised: #272c35;
-  --border: #333a45;
-  --text: #eef1f5;
-  --muted: #98a2b3;
-  --accent: #3b82f6;
-  --accent-hover: #2f6fd8;
-  --ok: #22c55e;
-  --danger: #ef4444;
+  /* Нейтральная палитра: от фона страницы к приподнятым поверхностям. */
+  --bg: #181b1d;
+  --surface: #202427;
+  --surface-raised: #2a2e31;
+  --surface-sunken: #121416;
+  --border: #3a3f42;
+  --border-strong: #4a5054;
+  --text: #eef1f4;
+  --muted: #99a1a8;
 
-  /* Единый радиус: панели крупнее, элементы управления мельче. */
+  /* Единственный акцент. */
+  --accent: #2c68fa;
+  --accent-hover: #4b80fb;
+  --accent-soft: rgba(44, 104, 250, 0.16);
+
+  /* Цвета состояний. */
+  --ok: #3ecf7e;
+  --danger: #f05252;
+  --danger-soft: rgba(240, 82, 82, 0.14);
+  --warning: #e8a33d;
+  --warning-soft: rgba(232, 163, 61, 0.14);
+
+  /* Шкала отступов. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Скругление: одно для всего прямоугольного, «таблетка» для круглого. */
   --radius: 12px;
-  --radius-sm: 8px;
+  --radius-pill: 999px;
+
+  /* Шкала размеров шрифта. */
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 30px;
+
+  /* Высота элементов управления: поле ввода и кнопка рядом должны совпадать. */
+  --control-height: 46px;
+  --icon-button-size: 52px;
+
+  --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.35);
 
   color-scheme: dark;
 }
@@ -27,39 +73,71 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 16px;
+  font-size: var(--fs-md);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 .shell {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 48px 24px;
+  padding: var(--space-6) var(--space-5);
 }
 
+/*
+ * Узкий экран (вход, ожидание, отказы) центрируется и по вертикали: одинокая
+ * карточка, прижатая к верху окна, выглядит обрезанной страницей.
+ */
 .shell--narrow {
-  max-width: 460px;
-  padding-top: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  max-width: 480px;
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+}
+
+.shell--room {
+  padding-top: var(--space-5);
+  padding-bottom: var(--space-5);
 }
 
 .title {
-  margin: 0 0 8px;
-  font-size: 32px;
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-2xl);
+  font-weight: 650;
+  letter-spacing: -0.02em;
 }
 
 .title--small {
-  font-size: 22px;
+  font-size: var(--fs-xl);
 }
 
 .subtitle {
-  margin: 0 0 24px;
+  margin: 0 0 var(--space-5);
+  max-width: 42ch;
   color: var(--muted);
+  font-size: var(--fs-md);
 }
 
 .note {
-  margin-top: 24px;
+  margin: var(--space-5) 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--fs-sm);
+}
+
+/* Карточка — общая подложка для форм и сообщений на узких экранах. */
+
+.card {
+  width: 100%;
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
+  text-align: left;
 }
 
 /* Форма входа */
@@ -67,60 +145,87 @@ body {
 .join-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: var(--space-1);
 }
 
 .field__label {
-  font-size: 14px;
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 
 .field__input {
   width: 100%;
-  padding: 12px 14px;
+  height: var(--control-height);
+  padding: 0 var(--space-4);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
   color: var(--text);
-  font-size: 16px;
+  font-family: inherit;
+  font-size: var(--fs-md);
+}
+
+.field__input::placeholder {
+  color: var(--muted);
 }
 
 .field__input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  border-color: var(--accent);
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 0;
+}
+
+/* Поле имени — главное действие стартового экрана, поэтому крупнее прочих. */
+.field__input--large {
+  height: 54px;
+  font-size: var(--fs-lg);
 }
 
 .field__hint {
   justify-self: end;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .field__error {
   margin: 0;
   color: var(--danger);
-  font-size: 14px;
+  font-size: var(--fs-sm);
 }
 
 /* Кнопки */
 
 .button {
-  padding: 12px 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--control-height);
+  padding: 0 var(--space-5);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: var(--surface-raised);
   color: var(--text);
-  font-size: 15px;
+  font-family: inherit;
+  font-size: var(--fs-md);
   cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 
 .button:hover:not(:disabled) {
   background: var(--border);
+  border-color: var(--border-strong);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .button--primary {
@@ -131,40 +236,201 @@ body {
 
 .button--primary:hover:not(:disabled) {
   background: var(--accent-hover);
+  border-color: transparent;
+}
+
+.button--block {
+  width: 100%;
 }
 
 .button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+}
+
+/*
+ * Круглая кнопка с иконкой. Подпись не рисуется постоянно — она всплывает по
+ * наведению и по фокусу с клавиатуры, а для чтения с экрана дублируется в
+ * aria-label. Панель управления не должна перетягивать внимание с видео.
+ */
+.icon-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-button-size);
+  height: var(--icon-button-size);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--border);
+  border-color: var(--border-strong);
+}
+
+.icon-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.icon-button__glyph {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+ * Выключенное устройство обязано читаться с одного взгляда: не приглушённая
+ * иконка, а залитый красным кружок с перечёркнутым глифом.
+ */
+.icon-button--off {
+  border-color: transparent;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.icon-button--off:hover:not(:disabled) {
+  background: rgba(240, 82, 82, 0.22);
+  border-color: transparent;
+}
+
+/* Выход — единственное необратимое действие на панели, поэтому он красный. */
+.icon-button--danger {
+  border-color: transparent;
+  background: var(--danger);
+  color: #fff;
+}
+
+.icon-button--danger:hover:not(:disabled) {
+  background: #d93d3d;
+  border-color: transparent;
+}
+
+.icon-button--accent {
+  border-color: transparent;
+  background: var(--accent);
+  color: #fff;
+}
+
+.icon-button--accent:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: transparent;
+}
+
+.icon-button--small {
+  width: var(--control-height);
+  height: var(--control-height);
+}
+
+.icon-button--small .icon-button__glyph {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-button__tip {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
+  color: var(--text);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.icon-button:hover .icon-button__tip,
+.icon-button:focus-visible .icon-button__tip {
+  opacity: 1;
 }
 
 /* Сообщения и состояния */
 
+/*
+ * Отказ — это карточка в общем стиле, а не красная полоса поверх интерфейса.
+ * Цветом помечены только иконка и тонкая подложка: тревожность должна быть
+ * пропорциональна событию.
+ */
 .notice {
-  padding: 16px;
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--surface-raised);
+  text-align: left;
+}
+
+.notice__icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.notice__body {
+  min-width: 0;
 }
 
 .notice__text {
   margin: 0;
+  font-size: var(--fs-md);
 }
 
 .notice__actions {
-  margin: 16px 0 0;
+  margin: var(--space-4) 0 0;
 }
 
 .notice--error {
-  border-color: var(--danger);
+  background: var(--danger-soft);
+  border-color: rgba(240, 82, 82, 0.35);
+}
+
+.notice--error .notice__icon {
+  stroke: var(--danger);
 }
 
 .notice--warning {
-  border-color: #b45309;
+  background: var(--warning-soft);
+  border-color: rgba(232, 163, 61, 0.35);
+}
+
+.notice--warning .notice__icon {
+  stroke: var(--warning);
 }
 
 .status {
   color: var(--muted);
+  font-size: var(--fs-sm);
 }
 
 .status--ok {
@@ -177,23 +443,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
-.room-actions {
-  margin-top: 24px;
+.room-notice {
+  margin-bottom: var(--space-4);
 }
 
 .room-side {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 16px;
+  gap: var(--space-4);
   min-width: 0;
 }
 
 .participants {
-  padding: 16px;
+  padding: var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -201,30 +467,57 @@ body {
 
 .participants__title {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .participant-list {
-  margin: 12px 0 0;
+  margin: var(--space-3) 0 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 8px;
+  gap: var(--space-1);
 }
 
 .participant-list__item {
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+/* Кружок с первой буквой имени: строка состава читается как список людей. */
+.participant-list__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
   background: var(--surface-raised);
-  font-size: 14px;
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.participant-list__item--self .participant-list__avatar {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 /* Видеосетка: 1 плитка на весь экран, 2 в ряд, 3-4 в квадрат 2x2 */
 
 .grid {
+  --grid-gap: var(--space-3);
   display: grid;
-  gap: 12px;
+  gap: var(--grid-gap);
   grid-template-columns: 1fr;
 }
 
@@ -234,88 +527,159 @@ body {
   grid-template-columns: repeat(2, 1fr);
 }
 
+/*
+ * Троих раскладываем как 2 + 1, и последнюю плитку центрируем в своей строке.
+ * Прижатая к левому краю одинокая плитка читается как пустой четвёртый слот,
+ * которого не существует.
+ */
+.grid--3 > :nth-child(3) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(50% - var(--grid-gap) / 2);
+}
+
 .tile {
   position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--surface-sunken);
 }
 
+/*
+ * Своя плитка помечена сдержанно: тонкая акцентная обводка внутрь кадра и
+ * приписка «(вы)» в подписи. Рамка в полный акцент превращала бы собственное
+ * видео в самое заметное на экране, хотя смотрят обычно на собеседников.
+ */
 .tile--self {
-  border-color: var(--accent);
+  border-color: rgba(44, 104, 250, 0.42);
 }
 
 .tile__video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background: #000;
+  background: var(--surface-sunken);
 }
 
 .tile__video--hidden {
   display: none;
 }
 
+/* Заглушка вместо видео: силуэт в кружке и имя под ним. */
 .tile__placeholder {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--space-3);
   width: 100%;
   height: 100%;
+  padding: var(--space-4);
+  background: radial-gradient(circle at 50% 42%, #23282c, var(--surface-sunken) 70%);
+}
+
+.tile__avatar {
+  display: grid;
+  place-items: center;
+  width: 30%;
+  min-width: 64px;
+  max-width: 112px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
 }
 
 .tile__silhouette {
-  width: 96px;
-  height: 96px;
-  fill: var(--border);
+  width: 56%;
+  height: 56%;
+  fill: var(--muted);
 }
 
-.tile__overlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
+/*
+ * Подпись с именем. Над видео это плашка с размытием подложки: полупрозрачный
+ * тёмный слой поверх любого кадра сохраняет читаемость, а размытие не даёт
+ * пёстрому фону просвечивать буквами. В заглушке та же плашка стоит в потоке
+ * под силуэтом — компонент один, отличается только положением.
+ */
+.tile__caption {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  gap: var(--space-2);
+  max-width: 100%;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: rgba(18, 20, 22, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: var(--fs-sm);
+}
+
+.tile__caption--overlay {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  max-width: calc(100% - var(--space-6));
 }
 
 .tile__name {
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .tile__mic {
-  width: 20px;
-  height: 20px;
+  flex: none;
+  width: 16px;
+  height: 16px;
   fill: var(--danger);
   color: var(--danger);
 }
 
+/* Сбой на конкретной плитке: остальные соединения продолжают работать. */
 .tile__error {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
+  top: var(--space-3);
+  left: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: 0;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: rgba(239, 68, 68, 0.9);
-  font-size: 14px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: rgba(18, 20, 22, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--danger);
+  font-size: var(--fs-sm);
 }
 
 .tile__error--warning {
-  background: rgba(180, 83, 9, 0.9);
+  color: var(--warning);
 }
 
+.tile__error-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+
+/* Кнопка «включить звук» — единственное, что нужно нажать на этой плитке. */
 .tile__sound {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: auto;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sm);
+  box-shadow: var(--shadow-raised);
 }
 
 /* Панель управления устройствами */
@@ -323,47 +687,39 @@ body {
 .controls {
   display: grid;
   justify-items: center;
-  gap: 10px;
-  margin-top: 16px;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 .controls__row {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+
+/* Выход отделён зазором: его не нажимают случайно вместе с микрофоном. */
+.controls__divider {
+  width: 1px;
+  height: 28px;
+  margin: 0 var(--space-1);
+  background: var(--border);
 }
 
 .controls__hint {
   margin: 0;
-  font-size: 14px;
 }
 
 .controls__fallback {
   display: grid;
-  gap: 6px;
+  gap: var(--space-1);
   width: 100%;
   max-width: 560px;
-}
-
-/* Панель должна умещаться в одну строку на целевых 1024px: перенос одинокой
-   кнопки на вторую строку выглядит случайностью, а не раскладкой. */
-.controls .button {
-  padding: 11px 14px;
-  font-size: 14px;
-}
-
-.controls__button {
-  min-width: 170px;
-}
-
-.controls__leave {
-  border-color: var(--danger);
-}
-
-.controls__button--off {
-  border-color: var(--danger);
-  color: var(--danger);
 }
 
 /* Раскладка комнаты и чат */
@@ -380,7 +736,7 @@ body {
 .room-layout {
   display: grid;
   grid-template-columns: minmax(560px, 1fr) minmax(280px, 320px);
-  gap: 16px;
+  gap: var(--space-4);
   align-items: stretch;
 }
 
@@ -395,6 +751,14 @@ body {
   }
 }
 
+/*
+ * Плитки держат 16:9 и не растягиваются на всю свободную высоту окна.
+ * Соблазн отдать сетке остаток экрана есть, но кадр с камеры приходит
+ * шестнадцать на девять: в вытянутой по вертикали плитке object-fit: cover
+ * срезал бы собеседнику половину лица по бокам. Пустое поле под панелью
+ * управления — честная плата за то, что люди в кадре целиком.
+ */
+
 .room-main {
   min-width: 0;
 }
@@ -402,9 +766,9 @@ body {
 .chat {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 320px;
-  padding: 16px;
+  padding: var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -412,7 +776,11 @@ body {
 
 .chat__title {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .chat__list {
@@ -426,46 +794,71 @@ body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-1);
 }
 
 .chat__item {
   display: grid;
   gap: 2px;
-  font-size: 14px;
+  font-size: var(--fs-sm);
   overflow-wrap: anywhere;
 }
 
+/*
+ * Сообщения подряд от одного автора — это одна реплика, разбитая на строки.
+ * Имя и время печатаются только над первой из них, остальные прижимаются
+ * вплотную: лента перестаёт быть столбцом повторяющихся подписей.
+ */
+.chat__item + .chat__item--follow {
+  margin-top: -2px;
+}
+
+.chat__item--first {
+  margin-top: var(--space-3);
+}
+
+.chat__list > .chat__item:first-child {
+  margin-top: 0;
+}
+
+/* Системные строки — по центру, мельче и серым: это фон событий, не разговор. */
 .chat__item--system {
+  margin: var(--space-3) 0;
   color: var(--muted);
-  font-style: italic;
+  font-size: var(--fs-xs);
   text-align: center;
 }
 
 .chat__meta {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: baseline;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 
 .chat__author {
   font-weight: 600;
   color: var(--text);
+  font-size: var(--fs-sm);
 }
 
 .chat__item--own .chat__author {
   color: var(--accent);
 }
 
+.chat__time {
+  font-variant-numeric: tabular-nums;
+}
+
 .chat__form {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .chat__error {
   margin: 0;
   color: var(--danger);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }

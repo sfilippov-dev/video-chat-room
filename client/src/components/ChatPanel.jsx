@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { MESSAGE_TYPES, SYSTEM_EVENTS, ERROR_CODES } from '../lib/events.js';
 import { MAX_MESSAGE_LENGTH } from '../config.js';
 import { useAutoScroll } from '../hooks/useAutoScroll.js';
+import { SendIcon } from './icons.jsx';
 
 /**
  * Общий чат комнаты.
@@ -41,26 +42,46 @@ export default function ChatPanel({ messages, selfId, onSend }) {
       <h2 className="chat__title">Чат</h2>
 
       <ol className="chat__list" ref={listRef}>
-        {messages.map((message) =>
-          message.type === MESSAGE_TYPES.SYSTEM ? (
-            <li key={message.id} className="chat__item chat__item--system">
-              {systemText(message)}
-            </li>
-          ) : (
+        {messages.map((message, index) => {
+          if (message.type === MESSAGE_TYPES.SYSTEM) {
+            return (
+              <li key={message.id} className="chat__item chat__item--system">
+                {systemText(message)}
+              </li>
+            );
+          }
+
+          /*
+           * Несколько сообщений подряд от одного человека — это одна реплика,
+           * разбитая на строки. Шапку с именем и временем печатаем только над
+           * первой из них: повторять имя у каждой строки значит превращать
+           * ленту в столбец подписей, в котором теряется сам текст. Системная
+           * строка разрывает серию — после неё разговор начинается заново.
+           */
+          const previous = messages[index - 1];
+          const grouped =
+            previous?.type !== MESSAGE_TYPES.SYSTEM && previous?.authorId === message.authorId;
+
+          return (
             <li
               key={message.id}
-              className={`chat__item${message.authorId === selfId ? ' chat__item--own' : ''}`}
+              className={
+                `chat__item${grouped ? ' chat__item--follow' : ' chat__item--first'}` +
+                `${message.authorId === selfId ? ' chat__item--own' : ''}`
+              }
             >
-              <span className="chat__meta">
-                <span className="chat__author">{message.name}</span>
-                <time className="chat__time" dateTime={new Date(message.ts).toISOString()}>
-                  {formatTime(message.ts)}
-                </time>
-              </span>
+              {grouped ? null : (
+                <span className="chat__meta">
+                  <span className="chat__author">{message.name}</span>
+                  <time className="chat__time" dateTime={new Date(message.ts).toISOString()}>
+                    {formatTime(message.ts)}
+                  </time>
+                </span>
+              )}
               <span className="chat__text">{message.text}</span>
             </li>
-          ),
-        )}
+          );
+        })}
       </ol>
 
       <form className="chat__form" onSubmit={handleSubmit}>
@@ -73,8 +94,14 @@ export default function ChatPanel({ messages, selfId, onSend }) {
           aria-label="Сообщение"
           onChange={(event) => setText(event.target.value)}
         />
-        <button className="button button--primary" type="submit" disabled={!trimmed}>
-          Отправить
+        <button
+          className="icon-button icon-button--accent icon-button--small"
+          type="submit"
+          disabled={!trimmed}
+          aria-label="Отправить"
+          title="Отправить"
+        >
+          <SendIcon className="icon-button__glyph" />
         </button>
       </form>
 

@@ -18,9 +18,21 @@ export default function ParticipantList({ participants, selfId }) {
 
       <ul className="participant-list">
         {participants.map((participant) => (
-          <li key={participant.id} className="participant-list__item">
-            {participant.name}
-            {participant.id === selfId ? ' (вы)' : ''}
+          <li
+            key={participant.id}
+            className={`participant-list__item${
+              participant.id === selfId ? ' participant-list__item--self' : ''
+            }`}
+          >
+            {/* Кружок с первой буквой имени: строка опознаётся боковым зрением
+                раньше, чем прочитана. Буква декоративна — имя рядом полное. */}
+            <span className="participant-list__avatar" aria-hidden="true">
+              {participant.name.trim().charAt(0)}
+            </span>
+            <span>
+              {participant.name}
+              {participant.id === selfId ? ' (вы)' : ''}
+            </span>
           </li>
         ))}
       </ul>

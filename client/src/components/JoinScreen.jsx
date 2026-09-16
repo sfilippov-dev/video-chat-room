@@ -39,11 +39,11 @@ export default function JoinScreen({ mode, onSubmit }) {
           : 'Вас пригласили в комнату. Представьтесь, чтобы войти.'}
       </p>
 
-      <form className="join-form" onSubmit={handleSubmit} noValidate>
+      <form className="join-form card" onSubmit={handleSubmit} noValidate>
         <label className="field">
           <span className="field__label">Ваше имя</span>
           <input
-            className="field__input"
+            className="field__input field__input--large"
             type="text"
             value={name}
             onChange={(event) => {
@@ -65,7 +65,11 @@ export default function JoinScreen({ mode, onSubmit }) {
           </p>
         ) : null}
 
-        <button className="button button--primary" type="submit" disabled={trimmed.length === 0}>
+        <button
+          className="button button--primary button--block"
+          type="submit"
+          disabled={trimmed.length === 0}
+        >
           {isCreating ? 'Создать комнату' : 'Войти'}
         </button>
       </form>

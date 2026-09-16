@@ -136,7 +136,7 @@
   - 14.3. Новичок по ack: создаёт соединения заранее и **ждёт** оффер; на `signal:offer` → `createAnswer` → `signal:answer`; на `signal:answer` → `setRemoteDescription`.
   - _Requirements: 10, US-6, Design: §3.4, §3.5, §4.2, §7.2, §7.3_
 
-- [ ] 15. **ICE: обмен кандидатами и удалённые потоки** · `Frontend`
+- [x] 15. **ICE: обмен кандидатами и удалённые потоки** · `Frontend`
   - Кандидаты не теряются, потоки доезжают до плиток.
   - 15.1. `onicecandidate` → `signal:ice`; входящие → `addIceCandidate`.
   - 15.2. Буфер кандидатов, пришедших до `setRemoteDescription`, со сливом после его применения.

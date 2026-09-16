@@ -97,6 +97,10 @@ export function useRoomSession({ roomId, name }) {
       });
       meshRef.current = mesh;
 
+      mesh.on('remote-stream', (peerId, stream) => {
+        setRemoteStreams((current) => new Map(current).set(peerId, stream));
+      });
+
       socket.on('connect_error', () => {
         if (cancelled) return;
         setStatus(SESSION_STATUS.SERVER_ERROR);
@@ -141,6 +145,10 @@ export function useRoomSession({ roomId, name }) {
 
       socket.on(EVENTS.SIGNAL_ANSWER, ({ fromId, sdp }) => {
         mesh.handleAnswer(fromId, sdp);
+      });
+
+      socket.on(EVENTS.SIGNAL_ICE, ({ fromId, candidate }) => {
+        mesh.handleIce(fromId, candidate);
       });
 
       socket.connect();

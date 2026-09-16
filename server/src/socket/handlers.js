@@ -1,5 +1,6 @@
 import { EVENTS, ERROR_CODES, MESSAGE_TYPES, SYSTEM_EVENTS } from './events.js';
-import { validateName, validateRoomId } from '../validation.js';
+import { validateName, validateRoomId, validateMessage } from '../validation.js';
+import { createRateLimiter } from '../rateLimiter.js';
 import {
   tryAddParticipant,
   removeParticipant,
@@ -20,6 +21,8 @@ import {
 export function registerHandlers(io, socket) {
   socket.data.roomId = null;
   socket.data.name = null;
+  // Ограничитель живёт в замыкании сокета: уходит вместе с соединением.
+  const rateLimiter = createRateLimiter();
 
   socket.on(EVENTS.JOIN, (payload, ack) => handleJoin(io, socket, payload, ack));
   socket.on(EVENTS.LEAVE, () => handleLeave(io, socket));
@@ -36,6 +39,10 @@ export function registerHandlers(io, socket) {
   );
 
   socket.on(EVENTS.MEDIA_STATE, (payload) => handleMediaState(io, socket, payload));
+
+  socket.on(EVENTS.CHAT_SEND, (payload, ack) =>
+    handleChatSend(io, socket, payload, ack, rateLimiter),
+  );
 }
 
 /**
@@ -198,4 +205,50 @@ function handleMediaState(io, socket, payload) {
     micOn: updated.micOn,
     camOn: updated.camOn,
   });
+}
+
+/**
+ * Отправка сообщения в общий чат.
+ *
+ * Имя автора и время берутся из состояния сервера, а не из полезной нагрузки:
+ * иначе любой участник смог бы отправить сообщение от чужого имени и с любой
+ * отметкой времени.
+ *
+ * Сообщение уходит всем, включая автора. Так у всех участников порядок ленты
+ * совпадает с серверным, и собственное сообщение не «прыгает» вверх, когда
+ * почти одновременно приходит чужое.
+ */
+function handleChatSend(io, socket, payload, ack, rateLimiter) {
+  const respond = typeof ack === 'function' ? ack : () => {};
+  const { roomId, name } = socket.data;
+
+  if (!roomId) {
+    respond({ ok: false, code: ERROR_CODES.INVALID_ROOM });
+    return;
+  }
+
+  const text = validateMessage((payload ?? {}).text);
+  if (!text.ok) {
+    respond({ ok: false, code: text.code });
+    return;
+  }
+
+  if (!rateLimiter.tryConsume()) {
+    respond({ ok: false, code: ERROR_CODES.RATE_LIMITED });
+    return;
+  }
+
+  const message = addMessage(roomId, {
+    type: MESSAGE_TYPES.USER,
+    authorId: socket.id,
+    name,
+    text: text.value,
+  });
+  if (!message) {
+    respond({ ok: false, code: ERROR_CODES.INVALID_ROOM });
+    return;
+  }
+
+  respond({ ok: true });
+  io.to(roomId).emit(EVENTS.CHAT_MESSAGE, message);
 }

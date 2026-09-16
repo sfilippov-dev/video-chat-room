@@ -6,6 +6,7 @@ import {
   addMessage,
   getParticipants,
   getMessages,
+  hasParticipant,
 } from '../rooms.js';
 
 /**
@@ -22,6 +23,16 @@ export function registerHandlers(io, socket) {
   socket.on(EVENTS.JOIN, (payload, ack) => handleJoin(io, socket, payload, ack));
   socket.on(EVENTS.LEAVE, () => handleLeave(io, socket));
   socket.on('disconnect', () => handleLeave(io, socket));
+
+  socket.on(EVENTS.SIGNAL_OFFER, (payload) =>
+    relaySignal(io, socket, EVENTS.SIGNAL_OFFER, payload, 'sdp'),
+  );
+  socket.on(EVENTS.SIGNAL_ANSWER, (payload) =>
+    relaySignal(io, socket, EVENTS.SIGNAL_ANSWER, payload, 'sdp'),
+  );
+  socket.on(EVENTS.SIGNAL_ICE, (payload) =>
+    relaySignal(io, socket, EVENTS.SIGNAL_ICE, payload, 'candidate'),
+  );
 }
 
 /**
@@ -134,4 +145,28 @@ function handleLeave(io, socket) {
   io.to(roomId).emit(EVENTS.PEER_LEFT, { id: socket.id, name: removed.name ?? name });
   io.to(roomId).emit(EVENTS.CHAT_SYSTEM, systemMessage);
   io.to(roomId).emit(EVENTS.PARTICIPANTS, { participants: getParticipants(roomId) });
+}
+
+/**
+ * Реле сигналинга: сервер перекладывает конверт от отправителя к адресату,
+ * подменяя targetId на fromId. Содержимое SDP и ICE-кандидатов он не разбирает
+ * и не хранит — вся логика согласования живёт на клиентах, а медиа идёт мимо
+ * сервера напрямую между браузерами.
+ *
+ * Единственная проверка — отправитель и адресат находятся в одной комнате.
+ * Всё остальное молча отбрасывается: доверять клиенту незачем.
+ */
+function relaySignal(io, socket, event, payload, payloadKey) {
+  const { roomId } = socket.data;
+  if (!roomId) return;
+
+  const data = payload ?? {};
+  const targetId = data.targetId;
+  const content = data[payloadKey];
+
+  if (typeof targetId !== 'string' || !content || typeof content !== 'object') return;
+  if (targetId === socket.id) return;
+  if (!hasParticipant(roomId, targetId)) return;
+
+  io.to(targetId).emit(event, { fromId: socket.id, [payloadKey]: content });
 }

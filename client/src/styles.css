@@ -337,6 +337,10 @@ body {
   min-width: 220px;
 }
 
+.controls__leave {
+  border-color: var(--danger);
+}
+
 .controls__button--off {
   border-color: var(--danger);
   color: var(--danger);

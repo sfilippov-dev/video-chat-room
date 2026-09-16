@@ -20,6 +20,7 @@ export default function ControlBar({
   inviteUrl,
   onToggleMic,
   onToggleCamera,
+  onLeave,
 }) {
   const [switchingCamera, setSwitchingCamera] = useState(false);
   const [copyState, setCopyState] = useState('idle');
@@ -83,6 +84,10 @@ export default function ControlBar({
 
         <button className="button" type="button" onClick={handleCopy}>
           Копировать ссылку
+        </button>
+
+        <button className="button controls__leave" type="button" onClick={onLeave}>
+          Выйти
         </button>
       </div>
 

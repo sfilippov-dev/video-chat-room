@@ -5,8 +5,12 @@ import ChatPanel from './ChatPanel.jsx';
 import ParticipantList from './ParticipantList.jsx';
 
 /**
- * Экран комнаты. Видеосетка, панель управления и чат подключаются следующими
- * задачами; сейчас здесь состояние сессии и состав комнаты.
+ * Экран комнаты: видеосетка, панель управления, состав комнаты и чат.
+ *
+ * Выход по кнопке отпускает устройства, закрывает соединения и возвращает на
+ * стартовый экран. Закрытие вкладки специально не перехватывается: сервер сам
+ * видит разрыв сокета и обрабатывает его тем же кодом, так что костыль на
+ * beforeunload только добавил бы второй путь к одному результату.
  */
 export default function RoomScreen({ roomId, name, onLeave }) {
   const session = useRoomSession({ roomId, name });
@@ -54,9 +58,6 @@ export default function RoomScreen({ roomId, name, onLeave }) {
     <main className="shell">
       <header className="room-header">
         <h1 className="title title--small">Комната</h1>
-        <button className="button" type="button" onClick={handleLeave}>
-          Выйти
-        </button>
       </header>
 
       {session.mediaState.error ? (
@@ -84,6 +85,7 @@ export default function RoomScreen({ roomId, name, onLeave }) {
             inviteUrl={inviteUrl}
             onToggleMic={session.toggleMic}
             onToggleCamera={session.toggleCamera}
+            onLeave={handleLeave}
           />
         </div>
 

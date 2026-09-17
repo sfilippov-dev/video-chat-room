@@ -28,7 +28,7 @@ export async function startTestServer() {
   };
 }
 
-export function connectClient(url) {
+function connectOnce(url) {
   const socket = createClient(url, {
     transports: ['websocket'],
     reconnection: false,
@@ -37,8 +37,33 @@ export function connectClient(url) {
 
   return new Promise((resolve, reject) => {
     socket.once('connect', () => resolve(socket));
-    socket.once('connect_error', reject);
+    socket.once('connect_error', (error) => {
+      socket.close();
+      reject(error);
+    });
   });
+}
+
+/**
+ * Рукопожатие websocket изредка срывается на загруженной машине: восемь тестовых
+ * файлов поднимают свои серверы параллельно, а `reconnection: false` не оставляет
+ * клиенту второго шанса. Для теста это шум, а не находка, поэтому пара повторов —
+ * дешевле и честнее, чем красный прогон на ровном месте. Настоящий отказ сервера
+ * переживёт все попытки и всё равно уронит тест.
+ */
+export async function connectClient(url, attempts = 3) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await connectOnce(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) await settle(50);
+    }
+  }
+
+  throw lastError;
 }
 
 export function join(socket, roomId, name) {
